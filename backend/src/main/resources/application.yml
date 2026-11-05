@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: portfolio
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  flyway:
+    enabled: true
+
+server:
+  shutdown: graceful
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

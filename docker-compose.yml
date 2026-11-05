@@ -1,0 +1,26 @@
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    container_name: portfolio-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: portfolio
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: portfolio
+    ports:
+      # Override DB_PORT in a root .env if something else already owns 5432
+      # (e.g. a locally installed PostgreSQL service).
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      # Postgres 18+ images store data in a major-version subdirectory, so the
+      # volume must be mounted at /var/lib/postgresql, not /var/lib/postgresql/data.
+      - portfolio-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  portfolio-db-data:
