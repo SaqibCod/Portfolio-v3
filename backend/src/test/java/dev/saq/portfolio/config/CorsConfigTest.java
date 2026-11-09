@@ -5,24 +5,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dev.saq.testsupport.TestEndpointsConfig;
+import dev.saq.testsupport.WebInfrastructureTestConfig;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * The API answers preflight requests from the configured origin only.
- *
- * <p>{@code @ConfigurationPropertiesScan} is not applied in an MVC slice, so {@link AppProperties}
- * is enabled explicitly here.
- */
+/** The API answers preflight requests from the configured origin only. */
 @WebMvcTest
-@Import(TestEndpointsConfig.class)
-@EnableConfigurationProperties(AppProperties.class)
+@Import({ TestEndpointsConfig.class, WebInfrastructureTestConfig.class })
 @ActiveProfiles("test")
 class CorsConfigTest {
 

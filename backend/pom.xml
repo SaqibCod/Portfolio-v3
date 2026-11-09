@@ -16,6 +16,8 @@
 
 	<properties>
 		<java.version>25</java.version>
+		<!-- Not managed by Spring Boot; newest release on Maven Central (checked 9 Nov 2026). -->
+		<bucket4j.version>8.22.0</bucket4j.version>
 	</properties>
 
 	<dependencies>
@@ -50,6 +52,17 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Rate limiting: token buckets held in a Caffeine cache, keyed by policy + hashed IP -->
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j_jdk17-core</artifactId>
+			<version>${bucket4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
 		</dependency>
 
 		<!-- Test (Boot 4.1 ships focused per-starter test modules; each pulls spring-boot-starter-test) -->

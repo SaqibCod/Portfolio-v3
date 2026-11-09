@@ -1,9 +1,11 @@
 package dev.saq.testsupport;
 
+import dev.saq.portfolio.annotation.RateLimited;
 import dev.saq.portfolio.exception.NotFoundException;
 import dev.saq.portfolio.exception.RateLimitedException;
 import dev.saq.portfolio.exception.TurnstileFailedException;
 import dev.saq.portfolio.exception.UpstreamUnavailableException;
+import dev.saq.portfolio.model.RateLimitPolicy;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,10 +28,24 @@ import jakarta.validation.constraints.Size;
 @RequestMapping("/api/v1/test")
 public class TestEndpointsController {
 
-	/** Plain success, used to assert rate-limit headers on a normal response. */
+	/** Plain success, with no rate-limit policy attached. */
 	@GetMapping("/ok")
 	String ok() {
 		return "ok";
+	}
+
+	/** Rate limited with the smallest policy, so a test can exhaust it in two requests. */
+	@GetMapping("/limited")
+	@RateLimited(RateLimitPolicy.GUESTBOOK)
+	String limited() {
+		return "limited";
+	}
+
+	/** Rate limited with a generous policy, for asserting the headers on a normal response. */
+	@GetMapping("/limited-read")
+	@RateLimited(RateLimitPolicy.PUBLIC_READ)
+	String limitedRead() {
+		return "limited-read";
 	}
 
 	/** 400: bean validation on the request body. */

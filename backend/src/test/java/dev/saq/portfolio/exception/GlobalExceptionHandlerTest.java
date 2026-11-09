@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dev.saq.testsupport.TestEndpointsConfig;
+import dev.saq.testsupport.WebInfrastructureTestConfig;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * and {@code status}, matching the contract's Problem schema.
  */
 @WebMvcTest
-@Import(TestEndpointsConfig.class)
+@Import({ TestEndpointsConfig.class, WebInfrastructureTestConfig.class })
 @ActiveProfiles("test")
 class GlobalExceptionHandlerTest {
 
