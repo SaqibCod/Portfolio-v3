@@ -7,6 +7,9 @@ import dev.saq.portfolio.config.AppProperties;
 /** Fully populated {@link AppProperties} for unit tests that build components by hand. */
 public final class TestAppProperties {
 
+	/** Matches {@code application-test.yml}, so hand-built and context-bound tests agree. */
+	public static final String API_BASE_URL = "https://api.example.com";
+
 	public static final String IP_SALT = "test-ip-salt-value";
 
 	public static final String ADMIN_TOKEN = "test-admin-token-0123456789abcdef";
@@ -34,6 +37,7 @@ public final class TestAppProperties {
 
 	private static AppProperties builder(String ipSalt, String adminToken) {
 		return new AppProperties(
+				new AppProperties.Api(API_BASE_URL),
 				new AppProperties.Cors(List.of("http://localhost:3000")),
 				new AppProperties.Security(ipSalt, adminToken),
 				new AppProperties.Turnstile(TURNSTILE_SECRET),

@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 class AppPropertiesTest {
 
 	private static final String[] COMPLETE_CONFIG = {
+			"app.api.base-url=https://api.example.com",
 			"app.cors.allowed-origins=http://localhost:3000",
 			"app.security.ip-salt=test-ip-salt-value",
 			"app.security.admin-token=test-admin-token-0123456789abcdef",
@@ -31,6 +32,7 @@ class AppPropertiesTest {
 		runner.withPropertyValues(COMPLETE_CONFIG).run(context -> {
 			assertThat(context).hasNotFailed();
 			AppProperties properties = context.getBean(AppProperties.class);
+			assertThat(properties.api().baseUrl()).isEqualTo("https://api.example.com");
 			assertThat(properties.cors().allowedOrigins()).containsExactly("http://localhost:3000");
 			assertThat(properties.security().ipSalt()).isEqualTo("test-ip-salt-value");
 			assertThat(properties.security().adminToken()).isEqualTo("test-admin-token-0123456789abcdef");
@@ -61,6 +63,19 @@ class AppPropertiesTest {
 	@Test
 	void failsWhenTurnstileSecretIsMissing() {
 		runner.withPropertyValues(without("app.turnstile.secret-key"))
+				.run(context -> assertThat(context).hasFailed());
+	}
+
+	@Test
+	void failsWhenTheApiBaseUrlIsMissing() {
+		runner.withPropertyValues(without("app.api.base-url"))
+				.run(context -> assertThat(context).hasFailed());
+	}
+
+	@Test
+	void failsWhenTheApiBaseUrlIsNotAnAbsoluteUrl() {
+		runner.withPropertyValues(COMPLETE_CONFIG)
+				.withPropertyValues("app.api.base-url=api.example.com")
 				.run(context -> assertThat(context).hasFailed());
 	}
 

@@ -37,12 +37,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+	private final ProblemTypes problemTypes;
+
+	public GlobalExceptionHandler(ProblemTypes problemTypes) {
+		this.problemTypes = problemTypes;
+	}
+
 	/** 400 — a request DTO failed bean validation; report the offending fields. */
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(
 			MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 
-		ProblemDetail body = problem(HttpStatus.BAD_REQUEST, ProblemTypes.VALIDATION,
+		ProblemDetail body = problem(HttpStatus.BAD_REQUEST, problemTypes.validation(),
 				"Validation failed", "One or more fields are invalid.");
 		body.setProperty("errors", fieldErrors(ex.getBindingResult()));
 		return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);
@@ -53,7 +59,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(
 			HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 
-		ProblemDetail body = problem(HttpStatus.BAD_REQUEST, ProblemTypes.VALIDATION,
+		ProblemDetail body = problem(HttpStatus.BAD_REQUEST, problemTypes.validation(),
 				"Validation failed", "Request body is missing or malformed.");
 		body.setProperty("errors", List.of(error("body", "must be valid JSON matching the request schema")));
 		return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);
@@ -94,20 +100,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	/** 404 */
 	@ExceptionHandler(NotFoundException.class)
 	ProblemDetail handleNotFound(NotFoundException ex) {
-		return problem(HttpStatus.NOT_FOUND, ProblemTypes.NOT_FOUND, "Not found", ex.getMessage());
+		return problem(HttpStatus.NOT_FOUND, problemTypes.notFound(), "Not found", ex.getMessage());
 	}
 
 	/** 422 */
 	@ExceptionHandler(TurnstileFailedException.class)
 	ProblemDetail handleTurnstileFailed(TurnstileFailedException ex) {
-		return problem(HttpStatus.UNPROCESSABLE_CONTENT, ProblemTypes.TURNSTILE_FAILED,
+		return problem(HttpStatus.UNPROCESSABLE_CONTENT, problemTypes.turnstileFailed(),
 				"Turnstile verification failed", ex.getMessage());
 	}
 
 	/** 429 — the window is known, so the client is told exactly how long to wait. */
 	@ExceptionHandler(RateLimitedException.class)
 	ResponseEntity<ProblemDetail> handleRateLimited(RateLimitedException ex) {
-		ProblemDetail body = problem(HttpStatus.TOO_MANY_REQUESTS, ProblemTypes.RATE_LIMITED,
+		ProblemDetail body = problem(HttpStatus.TOO_MANY_REQUESTS, problemTypes.rateLimited(),
 				"Too many requests", ex.getMessage());
 		return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
 				.header(HttpHeaders.RETRY_AFTER, Long.toString(ex.getRetryAfterSeconds()))
@@ -118,7 +124,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(UpstreamUnavailableException.class)
 	ResponseEntity<ProblemDetail> handleUpstreamUnavailable(UpstreamUnavailableException ex) {
 		log.warn("Upstream dependency unavailable: {}", ex.getMessage(), ex);
-		ProblemDetail body = problem(HttpStatus.SERVICE_UNAVAILABLE, ProblemTypes.UPSTREAM_UNAVAILABLE,
+		ProblemDetail body = problem(HttpStatus.SERVICE_UNAVAILABLE, problemTypes.upstreamUnavailable(),
 				"Service unavailable", ex.getMessage());
 		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
 				.header(HttpHeaders.RETRY_AFTER, Long.toString(ex.getRetryAfterSeconds()))
@@ -130,7 +136,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	ProblemDetail handleUnexpected(Exception ex) {
 		String correlationId = UUID.randomUUID().toString();
 		log.error("Unhandled exception [correlationId={}]", correlationId, ex);
-		ProblemDetail body = problem(HttpStatus.INTERNAL_SERVER_ERROR, ProblemTypes.INTERNAL,
+		ProblemDetail body = problem(HttpStatus.INTERNAL_SERVER_ERROR, problemTypes.internal(),
 				"Internal server error", "An unexpected error occurred.");
 		body.setProperty("correlationId", correlationId);
 		return body;
@@ -172,14 +178,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	/** Our {@code type} for the statuses the contract describes, {@code null} for anything else. */
-	private static URI typeFor(HttpStatusCode status) {
+	private URI typeFor(HttpStatusCode status) {
 		return switch (status.value()) {
-			case 400 -> ProblemTypes.VALIDATION;
-			case 401 -> ProblemTypes.UNAUTHORIZED;
-			case 404 -> ProblemTypes.NOT_FOUND;
-			case 429 -> ProblemTypes.RATE_LIMITED;
-			case 503 -> ProblemTypes.UPSTREAM_UNAVAILABLE;
-			case 500 -> ProblemTypes.INTERNAL;
+			case 400 -> problemTypes.validation();
+			case 401 -> problemTypes.unauthorized();
+			case 404 -> problemTypes.notFound();
+			case 429 -> problemTypes.rateLimited();
+			case 503 -> problemTypes.upstreamUnavailable();
+			case 500 -> problemTypes.internal();
 			default -> null;
 		};
 	}

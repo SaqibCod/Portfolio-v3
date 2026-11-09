@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -21,10 +22,23 @@ import jakarta.validation.constraints.Size;
 @Validated
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(
+		@NotNull @Valid Api api,
 		@NotNull @Valid Cors cors,
 		@NotNull @Valid Security security,
 		@NotNull @Valid Turnstile turnstile,
 		@NotNull @Valid Mail mail) {
+
+	/**
+	 * Identity of this API on the public internet.
+	 *
+	 * @param baseUrl the scheme and host clients reach the API on, with no trailing slash. Used to
+	 *                build the RFC 9457 problem {@code type} URIs, which are published identifiers:
+	 *                changing this value changes what clients match on.
+	 */
+	public record Api(
+			@NotBlank @Pattern(regexp = "https?://.+", message = "must be an absolute http(s) URL")
+			String baseUrl) {
+	}
 
 	/** CORS settings for the browser clients that may call this API. */
 	public record Cors(

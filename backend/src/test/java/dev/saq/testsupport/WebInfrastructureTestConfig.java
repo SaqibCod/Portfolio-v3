@@ -1,6 +1,7 @@
 package dev.saq.testsupport;
 
 import dev.saq.portfolio.config.AppProperties;
+import dev.saq.portfolio.exception.ProblemTypes;
 import dev.saq.portfolio.service.RateLimiterService;
 import dev.saq.portfolio.util.ClientIpUtils;
 
@@ -20,6 +21,11 @@ import org.springframework.context.annotation.Bean;
 @TestConfiguration(proxyBeanMethods = false)
 @EnableConfigurationProperties(AppProperties.class)
 public class WebInfrastructureTestConfig {
+
+	@Bean
+	ProblemTypes problemTypes(AppProperties properties) {
+		return new ProblemTypes(properties);
+	}
 
 	@Bean
 	RateLimiterService rateLimiterService() {

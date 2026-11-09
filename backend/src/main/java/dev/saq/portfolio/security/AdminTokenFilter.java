@@ -34,8 +34,14 @@ public class AdminTokenFilter extends OncePerRequestFilter {
 
 	private final byte[] expectedToken;
 
-	public AdminTokenFilter(AppProperties properties) {
+	private final String unauthorizedBody;
+
+	public AdminTokenFilter(AppProperties properties, ProblemTypes problemTypes) {
 		this.expectedToken = properties.security().adminToken().getBytes(StandardCharsets.UTF_8);
+		// Built once: the body is the same for every rejection.
+		this.unauthorizedBody = """
+				{"type":"%s","title":"Unauthorized","status":401,\
+				"detail":"A valid admin token is required."}""".formatted(problemTypes.unauthorized());
 	}
 
 	@Override
@@ -49,7 +55,7 @@ public class AdminTokenFilter extends OncePerRequestFilter {
 			FilterChain filterChain) throws ServletException, IOException {
 
 		if (!hasValidToken(request)) {
-			writeUnauthorized(response);
+			writeUnauthorized(response, unauthorizedBody);
 			return;
 		}
 		filterChain.doFilter(request, response);
@@ -69,15 +75,11 @@ public class AdminTokenFilter extends OncePerRequestFilter {
 	 * {@code GlobalExceptionHandler} cannot do it here. The body is byte-identical in shape to
 	 * every other 401 the API produces.
 	 */
-	private static void writeUnauthorized(HttpServletResponse response) throws IOException {
+	private static void writeUnauthorized(HttpServletResponse response, String body) throws IOException {
 		response.setStatus(HttpStatus.UNAUTHORIZED.value());
 		response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
 		response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-		// Hand-written rather than serialized: every value is a constant, so there is nothing to
-		// escape, and this keeps the filter independent of the JSON mapper's configuration.
-		response.getWriter().write("""
-				{"type":"%s","title":"Unauthorized","status":401,\
-				"detail":"A valid admin token is required."}""".formatted(ProblemTypes.UNAUTHORIZED));
+		response.getWriter().write(body);
 	}
 
 }

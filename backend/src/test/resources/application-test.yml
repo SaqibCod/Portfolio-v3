@@ -1,6 +1,8 @@
 # Test profile. Fixed, obviously fake values so tests never depend on the environment.
 # LoggingEmailService is active under this profile, so no mail is sent.
 app:
+  api:
+    base-url: https://api.example.com
   cors:
     allowed-origins: http://localhost:3000
   security:

@@ -7,6 +7,8 @@ spring:
     password: ${DB_PASSWORD:portfolio}
 
 app:
+  # app.api.base-url is inherited from application.yml on purpose: problem `type` URIs stay
+  # identical in every environment, so a client can match on them regardless of where it points.
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
   security:
