@@ -15,4 +15,9 @@ public class TestEndpointsConfig {
 		return new TestEndpointsController();
 	}
 
+	@Bean
+	TestAdminController testAdminController() {
+		return new TestAdminController();
+	}
+
 }
