@@ -1,0 +1,15 @@
+# Test profile. Fixed, obviously fake values so tests never depend on the environment.
+# LoggingEmailService is active under this profile, so no mail is sent.
+app:
+  cors:
+    allowed-origins: http://localhost:3000
+  security:
+    ip-salt: test-ip-salt-value
+    admin-token: test-admin-token-0123456789abcdef
+  turnstile:
+    # Cloudflare's documented "always passes" test secret key.
+    secret-key: 1x0000000000000000000000000000000AA
+  mail:
+    resend-api-key: test-resend-api-key
+    from: portfolio@example.com
+    owner-email: owner@example.com

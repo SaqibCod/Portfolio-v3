@@ -5,3 +5,18 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/portfolio}
     username: ${DB_USERNAME:portfolio}
     password: ${DB_PASSWORD:portfolio}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  security:
+    ip-salt: ${IP_HASH_SALT:local-development-ip-salt}
+    admin-token: ${ADMIN_TOKEN:local-development-admin-token-not-a-secret}
+  turnstile:
+    # Cloudflare's documented "always passes" test secret key.
+    secret-key: ${TURNSTILE_SECRET_KEY:1x0000000000000000000000000000000AA}
+  mail:
+    # LoggingEmailService is active under this profile, so nothing is actually sent.
+    resend-api-key: ${RESEND_API_KEY:local-development-resend-key}
+    from: ${MAIL_FROM:portfolio@example.com}
+    owner-email: ${OWNER_EMAIL:owner@example.com}
