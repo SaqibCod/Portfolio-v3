@@ -70,8 +70,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
 		ResponseEntity<Object> response = super.handleExceptionInternal(ex, body, headers, statusCode, request);
 		if (response != null && response.getBody() instanceof ProblemDetail problem && isUntyped(problem)) {
-			problem.setType(typeFor(statusCode));
-			problem.setTitle(titleFor(statusCode));
+			URI type = typeFor(statusCode);
+			// Statuses the contract does not describe (405, 415, 406…) keep Spring's about:blank
+			// type and reason phrase rather than being mislabelled as one of ours.
+			if (type != null) {
+				problem.setType(type);
+				problem.setTitle(titleFor(statusCode));
+			}
 			if (ex instanceof NoResourceFoundException) {
 				// Default detail mentions static resources, which means nothing to an API client.
 				problem.setDetail("No such resource.");
@@ -166,23 +171,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return error;
 	}
 
+	/** Our {@code type} for the statuses the contract describes, {@code null} for anything else. */
 	private static URI typeFor(HttpStatusCode status) {
-		if (status.value() == HttpStatus.NOT_FOUND.value()) {
-			return ProblemTypes.NOT_FOUND;
-		}
-		if (status.value() == HttpStatus.UNAUTHORIZED.value()) {
-			return ProblemTypes.UNAUTHORIZED;
-		}
-		if (status.value() == HttpStatus.TOO_MANY_REQUESTS.value()) {
-			return ProblemTypes.RATE_LIMITED;
-		}
-		if (status.is4xxClientError()) {
-			return ProblemTypes.VALIDATION;
-		}
-		if (status.value() == HttpStatus.SERVICE_UNAVAILABLE.value()) {
-			return ProblemTypes.UPSTREAM_UNAVAILABLE;
-		}
-		return ProblemTypes.INTERNAL;
+		return switch (status.value()) {
+			case 400 -> ProblemTypes.VALIDATION;
+			case 401 -> ProblemTypes.UNAUTHORIZED;
+			case 404 -> ProblemTypes.NOT_FOUND;
+			case 429 -> ProblemTypes.RATE_LIMITED;
+			case 503 -> ProblemTypes.UPSTREAM_UNAVAILABLE;
+			case 500 -> ProblemTypes.INTERNAL;
+			default -> null;
+		};
 	}
 
 	/** Titles stay identical to the ones our own exceptions produce for the same status. */
