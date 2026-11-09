@@ -3,8 +3,10 @@ package dev.saq.portfolio.config;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
@@ -22,7 +24,12 @@ public class HttpClientConfig {
 
 	static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
 
+	/**
+	 * Prototype-scoped, like the auto-configured builder it replaces: a builder is mutable, so a
+	 * shared instance would let one client's base URL and auth header leak into the next.
+	 */
 	@Bean
+	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public RestClient.Builder restClientBuilder() {
 		return builder(CONNECT_TIMEOUT, READ_TIMEOUT);
 	}
