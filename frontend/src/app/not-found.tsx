@@ -46,7 +46,9 @@ function Orbs() {
     <div aria-hidden="true">
       <span className="absolute top-10 left-[2%] size-14 rounded-full bg-[image:var(--orb-sphere)] motion-safe:animate-[bob_7s_ease-in-out_infinite] md:top-30 md:left-[8%] md:size-[110px]" />
       <span className="absolute top-7.5 right-[2%] h-7.5 w-17.5 -rotate-24 rounded-full bg-[image:var(--orb-capsule)] motion-safe:animate-[bobr_8s_ease-in-out_infinite] md:top-22.5 md:right-[9%] md:h-14.5 md:w-35" />
-      <span className="absolute right-[4%] bottom-50 bg-[image:var(--orb-glyph)] bg-clip-text font-mono text-[44px] leading-none font-semibold text-transparent motion-safe:animate-[bob_6s_ease-in-out_infinite] md:right-[14%] md:bottom-65 md:text-[84px]">
+      {/* Below the breakpoint this drops to the lower left, clear of the
+          card grid, as the export's mobile rule does. */}
+      <span className="absolute bottom-10 left-[4%] bg-[image:var(--orb-glyph)] bg-clip-text font-mono text-[52px] leading-none font-semibold text-transparent motion-safe:animate-[bob_6s_ease-in-out_infinite] md:right-[14%] md:bottom-65 md:left-auto md:text-[84px]">
         ?
       </span>
       <span className="absolute bottom-75 left-[12%] hidden size-22.5 box-border rounded-full border-20 border-transparent bg-[image:var(--orb-ring)] bg-origin-border [mask:radial-gradient(farthest-side,transparent_calc(100%-20px),#000_calc(100%-19px))] motion-safe:animate-[bob_9s_ease-in-out_infinite] md:block" />

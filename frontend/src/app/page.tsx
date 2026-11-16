@@ -26,11 +26,18 @@ export default function Home() {
           <p className="mx-auto mt-9 max-w-[760px] text-lg leading-relaxed font-medium md:text-[22px]">
             {siteConfig.tagline}
           </p>
+          {/* The export runs hero CTAs full-width below the breakpoint. */}
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <ButtonLink href="/#contact" variant="primary">
+            <ButtonLink
+              href="/#contact"
+              variant="primary"
+              className="max-md:w-full"
+            >
               Contact Me
             </ButtonLink>
-            <ButtonLink href="/projects">See Projects</ButtonLink>
+            <ButtonLink href="/projects" className="max-md:w-full">
+              See Projects
+            </ButtonLink>
           </div>
         </Container>
       </Section>
