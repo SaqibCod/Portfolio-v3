@@ -62,7 +62,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider>
           <SkipLink />
           <Header />
-          <main id="main" className="flex flex-1 flex-col">
+          {/* tabIndex -1 makes the skip link move focus onto <main> itself
+              rather than only setting the next tab stop, which is what
+              Safari and several screen readers need. */}
+          <main id="main" tabIndex={-1} className="flex flex-1 flex-col focus-visible:outline-none">
             {children}
           </main>
           <Footer />
