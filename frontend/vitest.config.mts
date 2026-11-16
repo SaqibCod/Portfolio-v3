@@ -12,5 +12,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // src/lib/env.ts validates these at import time, so the suite needs them.
+    env: {
+      NEXT_PUBLIC_SITE_URL: "https://example.com",
+      NEXT_PUBLIC_API_BASE_URL: "https://api.example.com",
+    },
   },
 });
