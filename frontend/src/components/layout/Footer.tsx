@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { FooterShapes } from "@/components/layout/FooterShapes";
+import { PresenceChip } from "@/components/presence/PresenceChip";
+import { StatusChip } from "@/components/status/StatusChip";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { siteConfig } from "@/lib/site-config";
 
@@ -93,7 +95,13 @@ export function Footer() {
         </nav>
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
-          <ThemeToggle variant="chip" />
+          {/* Status and presence render nothing until phases 07 and 09 wire
+              their data; the theme chip is always there. */}
+          <div className="flex flex-wrap gap-3">
+            <StatusChip />
+            <PresenceChip wording="long" live={false} />
+            <ThemeToggle variant="chip" />
+          </div>
           <span className="font-mono text-chip text-mute">
             © {year} {siteConfig.name} · {siteConfig.builtWith}
           </span>
