@@ -2,12 +2,16 @@ import { cn } from "@/lib/cn";
 
 export type BadgeTone = "default" | "ok" | "warn" | "err" | "off";
 
+/**
+ * Each tone also publishes `--dot-color`, which the `dot-pulse` keyframe mixes
+ * down to build the ring, so a live dot always pulses its own colour.
+ */
 const dotTones: Record<BadgeTone, string> = {
-  default: "bg-mute",
-  ok: "bg-ok",
-  warn: "bg-warn",
-  err: "bg-err",
-  off: "bg-off",
+  default: "bg-mute [--dot-color:var(--mute)]",
+  ok: "bg-ok [--dot-color:var(--ok)]",
+  warn: "bg-warn [--dot-color:var(--warn)]",
+  err: "bg-err [--dot-color:var(--err)]",
+  off: "bg-off [--dot-color:var(--off)]",
 };
 
 type BadgeProps = React.ComponentPropsWithoutRef<"span"> & {
@@ -37,7 +41,8 @@ export function Badge({ dot, live = false, className, children, ...props }: Badg
           className={cn(
             "size-2 shrink-0 rounded-full",
             dotTones[dot],
-            live && "motion-safe:animate-pulse",
+            live &&
+              "motion-safe:animate-[dot-pulse_2s_ease-in-out_infinite]",
           )}
         />
       ) : null}

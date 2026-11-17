@@ -249,6 +249,21 @@
   }
 }
 
+/**
+ * The status dot's expanding ring. The export hard-codes the ring to green
+ * even on amber dots; deriving it from the dot's own colour keeps a `warn` or
+ * `err` dot from pulsing the wrong hue.
+ */
+@keyframes dot-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--dot-color) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
 @keyframes bobr {
   0%,
   100% {
