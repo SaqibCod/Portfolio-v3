@@ -1,26 +1,307 @@
 @import "tailwindcss";
 
+/* The theme is driven by a class on <html> (next-themes attribute="class"). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Design tokens — docs/design/ exports.
+   :root is the light theme, .dark the dark theme. Every colour in the app
+   must come from one of these variables; never hard-code a hex value.
+   --------------------------------------------------------------------------- */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --bg: #f4f3ef;
+  --bg2: #ffffff;
+  --line: #dcdad2;
+
+  /* Text */
+  --fg: #0b0b0c;
+  --mute: #55555c;
+
+  /* Inverted band (a section that flips to the opposite ground) */
+  --inv: #0b0b0c;
+  --inv-bg2: #17171a;
+  --inv-fg: #f4f4f5;
+  --inv-mute: #a1a1aa;
+  --inv-line: #2a2a30;
+
+  /* Chrome */
+  --nav-bg: rgb(244 243 239 / 0.78);
+  --code: #16161a;
+  --err-text: #b91c1c;
+
+  /* Brushed-metal text fill used by display headings */
+  --metal: linear-gradient(180deg, #52525b 0%, #0b0b0c 55%, #3f3f46 100%);
 }
+
+.dark {
+  --bg: #08080a;
+  --bg2: #131316;
+  --line: #2a2a30;
+
+  --fg: #f4f4f5;
+  --mute: #a1a1aa;
+
+  --inv: #f2f1ec;
+  --inv-bg2: #ffffff;
+  --inv-fg: #0b0b0c;
+  --inv-mute: #52525b;
+  --inv-line: #d9d7cf;
+
+  --nav-bg: rgb(8 8 10 / 0.72);
+  --code: #0e0e11;
+  --err-text: #fca5a5;
+
+  --metal: linear-gradient(180deg, #ffffff 0%, #d4d4d8 40%, #71717a 100%);
+}
+
+/* Accents and states are the same in both themes. */
+:root {
+  --ac1: #8b5cf6;
+  --ac2: #d946ef;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --err: #ef4444;
+  --off: #71717a;
+
+  --grad: linear-gradient(90deg, #7c3aed, #c026d3);
+  --grad-shadow: 0 10px 30px -8px rgb(192 38 211 / 0.6);
+  --ring: rgb(139 92 246 / 0.25);
+
+  /* Decorative shapes only — never chrome, text or borders. */
+  --deco-lime: #a3e635;
+  --deco-orange: #fb923c;
+  --deco-fuchsia: #e879f9;
+
+  /* The floating objects that drift behind the hero and error bands. */
+  --orb-sphere: radial-gradient(
+    circle at 32% 28%,
+    #ffffff 0%,
+    #c4b5fd 14%,
+    #7c3aed 55%,
+    #2e1065 100%
+  );
+  --orb-capsule: linear-gradient(
+    180deg,
+    #fed7aa 0%,
+    #fb923c 45%,
+    #9a3412 100%
+  );
+  --orb-ring: conic-gradient(
+    from 200deg,
+    #f0abfc,
+    #c026d3,
+    #701a75,
+    #f0abfc
+  );
+  --orb-glyph: linear-gradient(
+    160deg,
+    #ecfccb 0%,
+    #a3e635 40%,
+    #3f6212 100%
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   Tailwind theme — maps the tokens above onto utility names.
+   `inline` is required so utilities emit var(--token) and therefore react to
+   the theme class instead of baking in the light value.
+   --------------------------------------------------------------------------- */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-mute: var(--mute);
+
+  --color-inv: var(--inv);
+  --color-inv-bg2: var(--inv-bg2);
+  --color-inv-fg: var(--inv-fg);
+  --color-inv-mute: var(--inv-mute);
+  --color-inv-line: var(--inv-line);
+
+  --color-nav: var(--nav-bg);
+  --color-code: var(--code);
+  --color-err-text: var(--err-text);
+
+  --color-ac1: var(--ac1);
+  --color-ac2: var(--ac2);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-err: var(--err);
+  --color-off: var(--off);
+
+  --color-deco-lime: var(--deco-lime);
+  --color-deco-orange: var(--deco-orange);
+  --color-deco-fuchsia: var(--deco-fuchsia);
+
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* The exports use a single breakpoint at 760px. */
+  --breakpoint-md: 47.5rem;
+
+  /* Radii, straight from the exports. */
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-input: 14px;
+  --radius-lg: 20px;
+  --radius-card: 24px;
+  --radius-xl: 28px;
+  --radius-2xl: 32px;
+  --radius-footer: 40px;
+  --radius-band: 44px;
+
+  /* Container and nav metrics. */
+  --spacing-nav: 72px;
+  --spacing-nav-sm: 64px;
+  --container-wrap: 1280px;
+
+  /* Type sizes the design repeats. */
+  --text-eyebrow: 13px;
+  --text-chip: 12px;
+  --text-btn: 14px;
+
+  --shadow-float: 0 30px 80px -20px rgb(0 0 0 / 0.55);
+  --shadow-lift: 0 12px 30px -12px rgb(0 0 0 / 0.35);
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  html {
+    background-color: var(--bg);
+    /* The design's single hard breakpoint; keeps the sticky nav from covering
+       in-page anchor targets. */
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--spacing-nav);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-stretch: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* One visible focus treatment everywhere, from .face:focus-visible. */
+  :focus-visible {
+    outline: 3px solid var(--ac1);
+    outline-offset: 6px;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  a:hover {
+    color: var(--ac1);
+  }
+
+  :is(h1, h2, h3, h4) {
+    text-wrap: balance;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------------------------------------------------------------------------
+   Keyframes from the exports. Every use is wrapped in `motion-safe:`.
+   --------------------------------------------------------------------------- */
+
+@keyframes wob {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  50% {
+    rotate: -8deg;
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-18px) rotate(8deg);
+  }
+}
+
+@keyframes bobr {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-24deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(-12deg);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Utilities the token system can't express as plain Tailwind classes.
+   --------------------------------------------------------------------------- */
+
+/* Inverted band: flips the local ground and re-points the text/line tokens so
+   every child keeps using the same utilities. Mirrors `.inv` in the exports. */
+@utility inv-band {
+  background-color: var(--inv);
+  --bg2: var(--inv-bg2);
+  --fg: var(--inv-fg);
+  --mute: var(--inv-mute);
+  --line: var(--inv-line);
+  color: var(--inv-fg);
+}
+
+/* Display type: Archivo 900 at 125% width, uppercase, tight. */
+@utility display {
+  font-weight: 900;
+  font-stretch: 125%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+}
+
+/* Brushed-metal fill for display headings. */
+@utility metal {
+  background: var(--metal);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Small uppercase mono section label. */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-eyebrow);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* The brand gradient fill used by primary buttons. */
+@utility grad {
+  background: var(--grad);
+  box-shadow: var(--grad-shadow);
 }
