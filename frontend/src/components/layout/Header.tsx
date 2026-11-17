@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NavLinks } from "@/components/layout/NavLinks";
+import { PresenceChip } from "@/components/presence/PresenceChip";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -79,6 +80,9 @@ export function Header() {
           <NavLinks className="hidden md:flex" />
 
           <div className="flex items-center gap-3">
+            {/* `.presence` is hidden below the breakpoint in the exports.
+                Renders nothing until phase 09 supplies a count. */}
+            <PresenceChip className="hidden md:inline-flex" />
             <ThemeToggle />
             <Button
               size="icon"
