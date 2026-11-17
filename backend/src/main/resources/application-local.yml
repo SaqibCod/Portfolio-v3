@@ -1,6 +1,13 @@
 # Local development profile: run with -Dspring-boot.run.profiles=local
-# Values come from the environment; the defaults match docker-compose.yml.
+# Values come from the environment; the defaults match docker-compose.yml, so this profile
+# starts with no configuration at all.
 spring:
+  config:
+    # Load backend/.env if it exists. Spring Boot has no built-in .env support, so without this
+    # the file is ignored; the [.properties] hint is required because .env has no extension.
+    # Optional and local-only on purpose: a stray .env must never mask a missing variable in a
+    # deployed environment. Resolved against the working directory, so run Maven from backend/.
+    import: "optional:file:./.env[.properties]"
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/portfolio}
     username: ${DB_USERNAME:portfolio}
@@ -15,7 +22,8 @@ app:
     ip-salt: ${IP_HASH_SALT:local-development-ip-salt}
     admin-token: ${ADMIN_TOKEN:local-development-admin-token-not-a-secret}
   turnstile:
-    # Cloudflare's documented "always passes" test secret key.
+    # Cloudflare's documented "always passes" test secret key. Set TURNSTILE_SECRET_KEY to
+    # 2x0000000000000000000000000000000AA to exercise the 422 rejection path instead.
     secret-key: ${TURNSTILE_SECRET_KEY:1x0000000000000000000000000000000AA}
   mail:
     # LoggingEmailService is active under this profile, so nothing is actually sent.
