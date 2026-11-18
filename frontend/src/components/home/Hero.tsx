@@ -240,7 +240,10 @@ export function Hero() {
           <Avatar />
         </div>
 
-        <p className="mt-4.5 font-mono text-chip text-mute">
+        {/* Below the breakpoint the mood chip is centred under the portrait
+            and hangs 22px past it, so the caption needs the export's larger
+            40px gap to clear it. */}
+        <p className="mt-10 font-mono text-chip text-mute md:mt-4.5">
           ( hover to poke · click to change glasses )
         </p>
 

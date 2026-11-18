@@ -25,9 +25,11 @@ function H2({ children, ...props }: React.ComponentPropsWithoutRef<"h2">) {
   return (
     <h2
       id={headingId(children)}
-      // `scroll-mt-nav` keeps the sticky header off an anchored heading, and
-      // the hairline above each section is the export's `.sec` divider.
-      className="display mt-18 scroll-mt-nav border-t border-line pt-18 text-[clamp(32px,4vw,52px)] first:mt-0 first:border-0 first:pt-0"
+      // The scroll margin has to clear whatever is pinned above: just the
+      // header on desktop, but the header plus the sticky on-this-page pill
+      // row below the breakpoint. The hairline above each section is the
+      // export's `.sec` divider.
+      className="display mt-18 scroll-mt-35 border-t border-line pt-18 text-[clamp(32px,4vw,52px)] first:mt-0 first:border-0 first:pt-0 md:scroll-mt-nav"
       {...props}
     >
       {children}

@@ -69,7 +69,7 @@ export default async function CaseStudyPage({
         ])}
       />
 
-      <section className="pt-14 pb-12 md:pt-14">
+      <section className="pt-8 pb-8 md:pt-14 md:pb-12">
         <Container>
           <CaseStudyHeader project={project} />
           <PendingSlot label="Live status" className="mt-6">
@@ -79,15 +79,26 @@ export default async function CaseStudyPage({
         </Container>
       </section>
 
-      <Container className="grid gap-12 pt-14 pb-20 md:grid-cols-[220px_minmax(0,1fr)] md:gap-18 md:pt-24 md:pb-30">
-        <nav aria-label="On this page" className="md:sticky md:top-26 md:self-start">
-          <p className="eyebrow mb-3">On this page</p>
-          <ul className="flex list-none flex-col gap-1">
+      <Container className="grid gap-6 pt-14 pb-20 md:grid-cols-[220px_minmax(0,1fr)] md:gap-18 md:pt-24 md:pb-30">
+        {/*
+          Two shapes. Below the breakpoint the export turns this into a row of
+          pills that sticks under the nav and scrolls sideways, bleeding past
+          the container's gutters; above it, the familiar rail in the margin.
+        */}
+        <nav
+          aria-label="On this page"
+          // `min-w-0` lets the grid column shrink below the pill row's own
+          // width; without it the row sizes the column and the page scrolls
+          // sideways instead of the pills scrolling inside it.
+          className="min-w-0 max-md:sticky max-md:top-nav-sm max-md:z-5 max-md:-mx-5 max-md:border-b max-md:border-line max-md:bg-bg max-md:px-5 max-md:py-3 md:sticky md:top-26 md:self-start"
+        >
+          <p className="eyebrow mb-3 max-md:hidden">On this page</p>
+          <ul className="flex list-none gap-2 overflow-x-auto md:flex-col md:gap-1 md:overflow-x-visible">
             {caseStudySections.map((section) => (
-              <li key={section.id}>
+              <li key={section.id} className="max-md:shrink-0">
                 <Link
                   href={`${project.href}#${section.id}`}
-                  className="flex min-h-10 items-center border-l-2 border-line pl-3.5 text-sm font-semibold no-underline text-mute transition-colors duration-150 hover:border-l-ac1 hover:text-fg"
+                  className="flex min-h-10 items-center whitespace-nowrap text-mute no-underline transition-colors duration-150 hover:text-fg max-md:rounded-full max-md:border max-md:border-line max-md:px-3.5 max-md:text-[13px] md:border-l-2 md:border-line md:pl-3.5 md:text-sm md:font-semibold md:hover:border-l-ac1"
                 >
                   {section.label}
                 </Link>

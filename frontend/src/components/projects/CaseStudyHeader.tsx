@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { CoverFrame } from "@/components/projects/CoverFrame";
 import { ButtonLink } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 
 import type { Project } from "@/lib/projects";
@@ -14,15 +15,20 @@ type MetaCell = { label: string; value: React.ReactNode };
 
 function MetaGrid({ cells }: { cells: MetaCell[] }) {
   return (
-    <dl className="mt-12 grid grid-cols-2 border-t border-b border-line md:grid-cols-4">
+    <dl className="mt-8 grid grid-cols-2 border-t border-b border-line md:mt-12 md:grid-cols-4">
       {cells.map((cell, index) => (
         <div
           key={cell.label}
-          className={
-            index > 0
-              ? "flex min-w-0 flex-col gap-2 py-5 md:border-l md:border-line md:pl-6"
-              : "flex min-w-0 flex-col gap-2 py-5"
-          }
+          className={cn(
+            "flex min-w-0 flex-col gap-2 py-5",
+            // Two columns below the breakpoint: the right-hand cell of each
+            // row is divided from the left, and the second row from the first.
+            index % 2 === 1 && "border-l border-line pl-4",
+            index >= 2 && "border-t border-line",
+            // One row above it, divided between every pair.
+            index > 0 ? "md:border-l md:border-line md:pl-6" : "md:border-l-0 md:pl-0",
+            "md:border-t-0",
+          )}
         >
           <dt className="font-mono text-[11px] tracking-[0.08em] uppercase text-mute">
             {cell.label}
@@ -60,8 +66,10 @@ export function CaseStudyHeader({ project }: CaseStudyHeaderProps) {
         </ol>
       </nav>
 
-      <div className="mt-10 flex items-start justify-between gap-6">
-        <h1 className="display metal text-[clamp(44px,8.4vw,130px)]">
+      {/* Below the breakpoint the export stacks these in reverse, so the
+          outlined number sits above the title rather than beside it. */}
+      <div className="mt-7 flex flex-col-reverse items-start gap-2 md:mt-10 md:flex-row md:justify-between md:gap-6">
+        <h1 className="display metal text-[10.5vw] md:text-[clamp(44px,8.4vw,130px)]">
           {project.title}
         </h1>
         <span
@@ -72,7 +80,7 @@ export function CaseStudyHeader({ project }: CaseStudyHeaderProps) {
         </span>
       </div>
 
-      <p className="mt-7 max-w-[760px] text-[clamp(20px,2vw,26px)] leading-snug font-medium">
+      <p className="mt-7 max-w-[760px] text-[18px] leading-snug font-medium md:text-[clamp(20px,2vw,26px)]">
         {project.summary}
       </p>
 
@@ -92,6 +100,8 @@ export function CaseStudyHeader({ project }: CaseStudyHeaderProps) {
         ]}
       />
 
+      {/* The export lets these share rows on narrow screens rather than
+          stacking full-width, so a lone link never spans the viewport. */}
       <div className="mt-8 flex flex-wrap items-center gap-3">
         {project.demoUrl ? (
           <ButtonLink
@@ -99,7 +109,7 @@ export function CaseStudyHeader({ project }: CaseStudyHeaderProps) {
             variant="primary"
             target="_blank"
             rel="noreferrer"
-            className="max-md:w-full"
+            className="max-md:flex-[1_1_40%]"
           >
             Open live app
           </ButtonLink>
@@ -109,12 +119,12 @@ export function CaseStudyHeader({ project }: CaseStudyHeaderProps) {
             href={project.repoUrl}
             target="_blank"
             rel="noreferrer"
-            className="max-md:w-full"
+            className="max-md:flex-[1_1_40%]"
           >
             View code
           </ButtonLink>
         ) : null}
-        <ButtonLink href="/projects" className="max-md:w-full">
+        <ButtonLink href="/projects" className="max-md:flex-[1_1_40%]">
           All projects
         </ButtonLink>
       </div>
@@ -124,7 +134,7 @@ export function CaseStudyHeader({ project }: CaseStudyHeaderProps) {
         label={`${project.title} hero screenshot · 16:9`}
         chrome={project.demoUrl ?? undefined}
         priority
-        className="mt-12 min-h-70 md:min-h-140"
+        className="mt-8 min-h-60 md:mt-12 md:min-h-140"
       />
     </header>
   );

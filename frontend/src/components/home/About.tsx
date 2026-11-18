@@ -14,7 +14,13 @@ import { Section } from "@/components/ui/Section";
  */
 export function About() {
   return (
-    <Section id="about" spacing="none" className="py-27 text-center md:py-37">
+    <Section
+      id="about"
+      spacing="none"
+      // The export's rhythm here is asymmetric: 110/130 on mobile,
+      // 150/170 above the breakpoint.
+      className="pt-27.5 pb-32.5 text-center md:pt-37.5 md:pb-42.5"
+    >
       <AboutObjects />
       <Container className="relative">
         <p className="eyebrow">01 — Who I am</p>
