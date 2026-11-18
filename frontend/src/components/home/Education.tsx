@@ -23,13 +23,13 @@ type Entry = {
 const entries: Entry[] = [
   {
     years: "[2026 – 2028]",
-    status: "In progress · first year",
+    status: "In progress",
     current: true,
     qualification: "Master of Computer Applications (MCA)",
     institution: "Indian Institute of Technology Patna",
     place: "Patna, India",
     facts: ["[CONFIRM: CGPA]"],
-    coursework: ["[CONFIRM: list your first-year courses]"],
+    coursework: ["[CONFIRM: list your coursework]"],
     note: "[Optional: a project, a paper or a highlight — one or two lines.]",
   },
   {

@@ -29,11 +29,9 @@ export function About() {
           About me
         </h2>
         <p className="mx-auto mt-9 max-w-[760px] text-lg leading-snug font-medium md:text-[22px]">
-          I’m {siteConfig.fullName}, a{" "}
-          <b className="font-extrabold text-fg">
-            first-year MCA student at IIT Patna
-          </b>
-          . I enjoy building{" "}
+          I’m {siteConfig.fullName}, an{" "}
+          <b className="font-extrabold text-fg">MCA student at IIT Patna</b>. I
+          enjoy building{" "}
           <b className="font-extrabold text-fg">complete systems</b>, from the
           interface people use to the backend, data, and AI that power it. I’m
           learning how software engineering is changing with AI, and I learn
@@ -45,14 +43,14 @@ export function About() {
           aria-label="Quick facts"
           className="mt-8 flex list-none flex-wrap justify-center gap-2.5"
         >
+          {/* No availability chip while the answer is "studying" — the
+              export's third chip goes back in when there is something real to
+              announce, e.g. <Badge dot="ok">Open to internships</Badge>. */}
           <li>
-            <Badge>First-year MCA · IIT Patna</Badge>
+            <Badge>MCA · IIT Patna</Badge>
           </li>
           <li>
-            <Badge>Based in [CONFIRM: City, Country]</Badge>
-          </li>
-          <li>
-            <Badge dot="ok">Open to [CONFIRM: internships / roles]</Badge>
+            <Badge>Based in {siteConfig.location}</Badge>
           </li>
         </ul>
 

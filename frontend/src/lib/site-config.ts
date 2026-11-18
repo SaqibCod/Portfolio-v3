@@ -33,8 +33,8 @@ export const siteConfig = {
   /** The meta description every page falls back to. Kept under 160 characters. */
   description:
     "Saqib Choudhary, MCA student at IIT Patna, building end-to-end software systems with Optimize tech and AI.",
-  email: "hello@example.com",
-  location: "[City, Country]",
+  email: "saqibc097@gmail.com",
+  location: "Delhi, India",
   siteUrl: env.siteUrl,
   locale: "en_US",
 
@@ -67,10 +67,18 @@ export const siteConfig = {
     { href: "/#contact", label: "Contact" },
   ] satisfies NavItem[],
 
+  /**
+   * These are also `Person.sameAs`, which is how a search engine ties the
+   * profiles to the person — so each one has to be a canonical profile URL.
+   * Tracking query strings are stripped, and a network with no profile yet is
+   * left out rather than pointed at its homepage.
+   */
   social: [
-    { href: "https://github.com/", label: "GitHub" },
-    { href: "https://linkedin.com/", label: "LinkedIn" },
-    { href: "https://x.com/", label: "X / Twitter" },
+    { href: "https://github.com/SaqibCod", label: "GitHub" },
+    {
+      href: "https://www.linkedin.com/in/saqib-chaudhary09/",
+      label: "LinkedIn",
+    },
   ] satisfies SocialLink[],
 
   /** Footer "Site" column. */
