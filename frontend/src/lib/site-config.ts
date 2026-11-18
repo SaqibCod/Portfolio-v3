@@ -31,6 +31,24 @@ export const siteConfig = {
   siteUrl: env.siteUrl,
   locale: "en_US",
 
+  /** The hero portrait, also the `Person` JSON-LD image. */
+  avatar: {
+    src: "/avatar-smile-clear.png",
+    alt: "3D avatar of Saq, smiling",
+  },
+
+  /** `Person.knowsAbout` — the subjects the site is actually about. */
+  knowsAbout: [
+    "Java",
+    "Spring Boot",
+    "Spring AI",
+    "Next.js",
+    "React",
+    "TypeScript",
+    "PostgreSQL",
+    "Retrieval-augmented generation",
+  ],
+
   nav: [
     { href: "/#about", label: "About" },
     { href: "/projects", label: "Projects" },
