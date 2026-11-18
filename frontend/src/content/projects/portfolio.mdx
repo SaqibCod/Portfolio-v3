@@ -1,0 +1,132 @@
+export const meta = {
+  title: "This portfolio",
+  kind: "Backend · Realtime",
+  summary:
+    "The site you are on: static pages for everything search engines read, and a small API for the handful of things that have to be live.",
+  // [CONFIRM] Replace both dates with the real ones.
+  date: "2026-02-08",
+  updated: "2026-11-18",
+  tags: ["Backend", "Frontend", "Realtime"],
+  stack: ["Next.js", "Spring Boot", "PostgreSQL", "SSE", "WebSocket"],
+  featured: true,
+  role: "Solo — design, backend, frontend",
+  timeline: "[CONFIRM: Month YYYY – present]",
+};
+
+## Overview
+
+Two halves. A Next.js frontend renders every page that matters for search at
+build time, so the content is in the HTML before any JavaScript runs. A Spring
+Boot API handles only what genuinely has to be live: the AI chat, GitHub stats,
+uptime history, a moderated guestbook, the contact form and live presence.
+
+For the full walk-through of how a request flows through both halves, see
+[Tech behind this site](/tech).
+
+<MetricTiles
+  items={[
+    { value: "[N]", label: "[e.g. Lighthouse performance score]" },
+    { value: "[N kB]", label: "[e.g. JavaScript shipped on first load]" },
+    { value: "[N]", label: "[e.g. API endpoints under /api/v1]" },
+  ]}
+/>
+
+## The problem
+
+A portfolio has two jobs that pull in opposite directions. It has to be fully
+readable by a crawler and fast on a cold load, and it has to show that the
+person who built it can do real backend work. Making everything dynamic fails
+the first job; making everything static fails the second.
+
+So the split is the point: nothing that a crawler needs is ever behind a fetch,
+and nothing that is genuinely live pretends to be static.
+
+[CONFIRM: anything else that shaped it — a job search, a deadline, a budget.]
+
+## Architecture
+
+Pages are pre-rendered by Next.js and served as HTML. Each live widget calls
+one versioned endpoint under `/api/v1` after the page has painted, so a slow or
+unavailable API degrades a single card rather than the page. Errors are
+RFC 9457 Problem Details everywhere, and nothing public requires an account.
+
+<ArchDiagram
+  label="A visitor's browser loads pre-rendered Next.js pages. Live widgets on those pages call the Spring Boot API under /api/v1, which reads from PostgreSQL and from external services: the GitHub API, an LLM for chat, and email for notifications."
+  rows={[
+    [
+      { title: "Browser", sub: "anonymous · no cookies" },
+      { title: "Next.js pages", sub: "pre-rendered" },
+      { title: "Spring Boot API", sub: "/api/v1", accent: true },
+    ],
+    [
+      { title: "PostgreSQL", sub: "entries · uptime history" },
+      { title: "pgvector", sub: "site content embeddings" },
+      { title: "External", sub: "GitHub · LLM · email" },
+    ],
+  ]}
+  caption="Each feature touches a different slice of this; the tech page lets you light one up at a time."
+/>
+
+<CodeBlock
+  filename="400 · application/problem+json"
+  code={`{
+  "type": "https://api.example.com/problems/validation",
+  "title": "Validation failed",
+  "status": 400,
+  "errors": [
+    { "field": "message", "message": "must be at most 500 characters" }
+  ]
+}`}
+/>
+
+## Key decisions
+
+<Decisions
+  items={[
+    {
+      title: "Static first, dynamic only where it earns it",
+      body:
+        "Every page's text is server-rendered HTML with its own title, description, canonical URL and JSON-LD. The interactive extras — chat, presence, the command palette — never hold content that exists nowhere else, so turning JavaScript off costs you nothing but the extras.",
+    },
+    {
+      title: "No accounts, no cookies, no tracking",
+      body:
+        "Nothing public requires signing in, so there are no sessions, no CSRF handling and no consent banner. Spam is handled with Turnstile, honeypot fields, per-IP rate limits and manual approval instead of identity.",
+    },
+    {
+      title: "The OpenAPI contract is the source of truth",
+      body:
+        "The frontend's API types are generated from the same YAML the backend implements, so a renamed field fails the typecheck instead of shipping a silently broken widget.",
+    },
+  ]}
+/>
+
+## Demo
+
+You are looking at it. Every page of this site is the demo; the
+[tech page](/tech) is the annotated version.
+
+## Challenges & results
+
+<TwoUp
+  items={[
+    {
+      eyebrow: "Hardest part",
+      body: "[CONFIRM: what actually fought you — hydration, streaming, rate limiting, the vector index.]",
+    },
+    {
+      eyebrow: "What I learned",
+      body: "[CONFIRM: the one lesson you would carry into the next project.]",
+    },
+  ]}
+/>
+
+### What I would do next
+
+<Ticks
+  items={[
+    "[CONFIRM: next improvement]",
+    "[CONFIRM: next improvement]",
+    "[CONFIRM: next improvement]",
+  ]}
+/>

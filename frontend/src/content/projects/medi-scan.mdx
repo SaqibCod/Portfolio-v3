@@ -1,0 +1,139 @@
+export const meta = {
+  title: "Medi-Scan",
+  kind: "AI · Full-stack",
+  summary:
+    "Upload a lab report and get a plain-language explanation of every value, backed by retrieved medical references.",
+  // [CONFIRM] Replace both dates with the real ones.
+  date: "2026-06-15",
+  updated: "2026-10-05",
+  tags: ["AI", "Backend", "Frontend"],
+  stack: [
+    "Next.js",
+    "Spring AI",
+    "pgvector",
+    "Gemini / Ollama",
+    "Resilience4j",
+  ],
+  featured: true,
+  role: "[CONFIRM: solo — design, backend, frontend]",
+  timeline: "[CONFIRM: Month YYYY – Month YYYY]",
+  // [CONFIRM] Add `demoUrl` and `repoUrl` once deployed and public.
+};
+
+## Overview
+
+Medi-Scan turns a lab report into something you can actually read. Every value
+is explained in ordinary language, with the reference range it is measured
+against and a citation back to the source the explanation came from. It runs on
+a zero-cost stack, and falls back to a second model automatically when the
+primary one is unavailable.
+
+[CONFIRM: two or three sentences on who it is for and what prompted it.]
+
+<MetricTiles
+  items={[
+    { value: "[N]", label: "[e.g. reports analysed]" },
+    { value: "[N s]", label: "[e.g. median analysis time]" },
+    { value: "[N%]", label: "[e.g. values matched to a reference range]" },
+  ]}
+/>
+
+## The problem
+
+A lab report is a table of numbers written for someone who already knows what
+they mean. The patient holding it gets a column of values, a reference range in
+small print, and no explanation — so the next step is usually a search engine
+and an afternoon of worry.
+
+[CONFIRM: the specific report or moment that started this, in one scenario.]
+
+[CONFIRM: the constraint you set yourself — for example never inventing a
+number, never giving a diagnosis, or running entirely on free tiers.]
+
+## Architecture
+
+An uploaded report is parsed into individual values, each value is matched
+against retrieved reference material in the vector store, and the model is
+asked to explain only what it was given. If the primary model fails or times
+out, the circuit breaker switches to the local fallback and the response says
+which model answered.
+
+<ArchDiagram
+  label="An upload goes from the Next.js UI to the Spring Boot API, which parses the report, retrieves matching reference material from pgvector, and asks the primary LLM for an explanation. A circuit breaker routes to a local fallback model when the primary is unavailable."
+  rows={[
+    [
+      { title: "Next.js UI", sub: "upload · results" },
+      { title: "Spring Boot API", sub: "parse · retrieve · explain", accent: true },
+      { title: "Gemini", sub: "primary model" },
+    ],
+    [
+      { title: "Reference corpus", sub: "chunk · embed" },
+      { title: "pgvector", sub: "similarity search" },
+      { title: "Ollama", sub: "fallback model" },
+    ],
+  ]}
+  caption="[CONFIRM: adjust the boxes to match Medi-Scan's real components.]"
+/>
+
+<CodeBlock
+  filename="AnalysisService.java"
+  code={`@CircuitBreaker(name = "primaryModel", fallbackMethod = "explainWithFallback")
+public AnalysisResponse explain(ReportValues values) {
+    var context = referenceStore.search(values.terms());
+    return mapper.toResponse(primaryModel.call(prompt(values, context)));
+}`}
+/>
+
+## Key decisions
+
+<Decisions
+  items={[
+    {
+      title: "A second model instead of a retry",
+      body:
+        "Retrying a rate-limited model just fails more slowly. A circuit breaker in front of a local fallback keeps the feature answering, and the response names the model so the degradation is visible rather than silent.",
+    },
+    {
+      title: "[CONFIRM: how reports are parsed]",
+      body:
+        "[What you chose for extracting values, what you rejected, and how you handle a format you have never seen.]",
+    },
+    {
+      title: "[CONFIRM: what the product refuses to do]",
+      body:
+        "[The line you drew — no diagnosis, no advice, no stored reports — and how the UI makes that clear.]",
+    },
+  ]}
+/>
+
+## Demo
+
+<DemoSlot
+  label="Medi-Scan demo"
+  note="[CONFIRM] Add `demoUrl` to this file's meta and swap this slot for the live embed. Use a synthetic report in the recording — never a real one."
+/>
+
+## Challenges & results
+
+<TwoUp
+  items={[
+    {
+      eyebrow: "Hardest bug",
+      body: "[What broke, how you tracked it down, and what actually fixed it.]",
+    },
+    {
+      eyebrow: "What I learned",
+      body: "[The one lesson you would carry into the next project.]",
+    },
+  ]}
+/>
+
+### What I would do next
+
+<Ticks
+  items={[
+    "[CONFIRM: next improvement]",
+    "[CONFIRM: next improvement]",
+    "[CONFIRM: next improvement]",
+  ]}
+/>
