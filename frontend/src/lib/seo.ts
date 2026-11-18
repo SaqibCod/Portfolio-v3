@@ -12,6 +12,11 @@ export type BuildMetadataOptions = {
   image?: string;
   /** Set for pages that must stay out of search results. */
   noIndex?: boolean;
+  /**
+   * Skips the root layout's `%s | Saq` template. Set on the home page, whose
+   * title already names the site and would otherwise read "Saq — … | Saq".
+   */
+  absoluteTitle?: boolean;
 };
 
 /** Normalises a path to a single leading slash and no trailing slash. */
@@ -29,8 +34,8 @@ export function absoluteUrl(pathOrUrl: string): string {
 }
 
 /**
- * Next serves this path from `app/opengraph-image.tsx`, which phase 03 adds
- * along with the rest of the OG work. Until then the URL resolves to a 404.
+ * Served by `app/opengraph-image.tsx` — the branded card every page falls
+ * back to. A route with its own `opengraph-image` overrides it automatically.
  */
 export const defaultOgImage = "/opengraph-image";
 
@@ -45,13 +50,14 @@ export function buildMetadata({
   path,
   image = defaultOgImage,
   noIndex = false,
+  absoluteTitle = false,
 }: BuildMetadataOptions): Metadata {
   const canonicalPath = normalizePath(path);
   const url = absoluteUrl(canonicalPath);
   const imageUrl = absoluteUrl(image);
 
   return {
-    title,
+    title: absoluteTitle ? { absolute: title } : title,
     description,
     alternates: { canonical: canonicalPath },
     openGraph: {

@@ -8,7 +8,14 @@ export default defineConfig({
     // `next build` compiles MDX through @next/mdx; Vitest needs its own
     // loader to import the same case-study files. `pre` puts it ahead of the
     // React plugin, which only understands the JSX that MDX compiles down to.
-    { ...mdx(), enforce: "pre" },
+    //
+    // `providerImportSource` points at the same `useMDXComponents` the App
+    // Router uses, so a case study resolves `<MetricTiles>` and friends in a
+    // test exactly as it does in a build.
+    {
+      ...mdx({ providerImportSource: "@/mdx-components" }),
+      enforce: "pre",
+    },
     react(),
   ],
   resolve: {

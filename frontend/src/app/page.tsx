@@ -1,86 +1,120 @@
-import { Badge } from "@/components/ui/Badge";
+import { About } from "@/components/home/About";
+import { ContactBand } from "@/components/home/ContactBand";
+import { Education } from "@/components/home/Education";
+import { Hero } from "@/components/home/Hero";
+import { Services } from "@/components/home/Services";
+import { TechStrip } from "@/components/home/TechStrip";
+import { ProjectGrid } from "@/components/projects/ProjectGrid";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { ButtonLink } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
+import { PendingSlot } from "@/components/ui/PendingSlot";
 import { Section } from "@/components/ui/Section";
+import { personJsonLd } from "@/lib/jsonld";
+import { getFeaturedProjects } from "@/lib/projects";
 import { buildMetadata } from "@/lib/seo";
 import { siteConfig } from "@/lib/site-config";
 
 import type { Metadata } from "next";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Home",
+  title: `${siteConfig.name} — ${siteConfig.role}`,
   description: siteConfig.description,
   path: "/",
+  // The home title already names the site; the layout's "%s | Saq" template
+  // would otherwise repeat it.
+  absoluteTitle: true,
 });
 
 export default function Home() {
+  const featured = getFeaturedProjects();
+
   return (
     <>
-      <Section className="text-center">
+      <JsonLd data={personJsonLd()} />
+
+      <Hero />
+      <TechStrip />
+      <About />
+      <Services />
+
+      {/* 03 — Selected work */}
+      <Section id="projects" rounded className="-mt-7 bg-bg py-20 md:-mt-11 md:py-30">
         <Container>
-          <p className="eyebrow">Phase 02 — Frontend core</p>
-          <h1 className="display metal mt-4 text-[clamp(44px,9.6vw,112px)]">
-            Hi, I’m {siteConfig.name}
-          </h1>
-          <p className="mx-auto mt-9 max-w-[760px] text-lg leading-relaxed font-medium md:text-[22px]">
-            {siteConfig.tagline}
-          </p>
-          {/* The export runs hero CTAs full-width below the breakpoint. */}
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <ButtonLink
-              href="/#contact"
-              variant="primary"
-              className="max-md:w-full"
-            >
-              Contact Me
-            </ButtonLink>
+          <div className="mb-10 flex flex-col items-start gap-4 md:mb-12 md:flex-row md:items-end md:justify-between md:gap-6">
+            <div>
+              <p className="eyebrow">03 — Selected work</p>
+              <h2 className="display metal mt-4.5 text-[10vw] md:text-[clamp(44px,7vw,112px)]">
+                Projects
+              </h2>
+            </div>
             <ButtonLink href="/projects" className="max-md:w-full">
-              See Projects
+              All projects
             </ButtonLink>
+          </div>
+          <ProjectGrid
+            projects={featured}
+            label="Featured projects"
+            variant="featured"
+            cardAs="h3"
+          />
+        </Container>
+      </Section>
+
+      {/* 04 — Currently building */}
+      <Section id="building" className="py-10 md:py-20">
+        <Container>
+          <p className="eyebrow">04 — Live from GitHub</p>
+          <h2 className="display metal mt-4.5 text-[10vw] md:text-[clamp(44px,7vw,112px)]">
+            Currently building
+          </h2>
+          <div className="mt-8 grid gap-6 md:mt-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+            <PendingSlot label="Recent activity">
+              The latest commits, pull requests and releases from my public
+              repositories, read from the GitHub API and cached server-side.
+              Arrives with the GitHub phase.
+            </PendingSlot>
+            <PendingSlot label="GitHub stats">
+              Contribution graph and top languages for the last year, refreshed
+              every few hours. Arrives with the GitHub phase.
+            </PendingSlot>
           </div>
         </Container>
       </Section>
 
-      <Section inverted rounded>
+      <Education />
+
+      {/* 06 — Guestbook */}
+      <Section id="guestbook" className="pt-0 pb-30 md:pb-42">
         <Container>
-          <p className="eyebrow">Shell</p>
-          <h2 className="display mt-4 text-[clamp(32px,7vw,64px)]">
-            Tokens, Theme &amp; Primitives
-          </h2>
-          <p className="mt-6 max-w-[560px] leading-relaxed text-mute">
-            The header, footer, navigation, theme toggle and UI primitives are
-            in place. Real page content lands in phase 03.
-          </p>
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
-            <Card>
-              <h3 className="display text-xl">Both Themes</h3>
-              <p className="mt-4 leading-relaxed text-mute">
-                Every surface, border and text tier reads from a CSS variable,
-                so the toggle in the header repaints the whole page.
+          <div className="mb-8 flex flex-col items-start gap-4 md:mb-12 md:flex-row md:items-end md:justify-between md:gap-6">
+            <div>
+              <p className="eyebrow">06 — Guestbook</p>
+              <h2 className="display metal mt-4.5 text-[10vw] md:text-[clamp(44px,7vw,112px)]">
+                Say hi
+              </h2>
+              <p className="mt-4.5 max-w-[460px] leading-relaxed text-mute">
+                Notes from people who stopped by. Every entry is read and
+                approved by me before it shows up here.
               </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Badge dot="ok">Operational</Badge>
-                <Badge dot="warn">Degraded</Badge>
-                <Badge dot="off">Unknown</Badge>
-              </div>
-            </Card>
-            <Card>
-              <h3 className="display text-xl">Typed API Client</h3>
-              <p className="mt-4 leading-relaxed text-mute">
-                <code className="font-mono text-sm">openapi-fetch</code> is
-                typed straight from the OpenAPI contract, so a wrong path or
-                field fails the typecheck.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Badge>Next.js</Badge>
-                <Badge>Spring Boot</Badge>
-                <Badge>PostgreSQL</Badge>
-              </div>
-            </Card>
+            </div>
+            <ButtonLink
+              href="/guestbook"
+              variant="primary"
+              className="max-md:w-full"
+            >
+              Sign the guestbook
+            </ButtonLink>
           </div>
+          <PendingSlot label="Approved entries">
+            The three most recent approved notes, loaded from{" "}
+            <code className="font-mono">/api/v1/guestbook</code>. Arrives with
+            the guestbook phase, along with the page the button above points at.
+          </PendingSlot>
         </Container>
       </Section>
+
+      <ContactBand />
     </>
   );
 }
