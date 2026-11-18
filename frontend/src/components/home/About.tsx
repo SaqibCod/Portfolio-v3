@@ -43,14 +43,18 @@ export function About() {
           aria-label="Quick facts"
           className="mt-8 flex list-none flex-wrap justify-center gap-2.5"
         >
-          {/* No availability chip while the answer is "studying" — the
-              export's third chip goes back in when there is something real to
-              announce, e.g. <Badge dot="ok">Open to internships</Badge>. */}
           <li>
             <Badge>MCA · IIT Patna</Badge>
           </li>
           <li>
             <Badge>Based in {siteConfig.location}</Badge>
+          </li>
+          <li>
+            {/* The live dot is the export's signal that this one is a current
+                state rather than a fixed fact. */}
+            <Badge dot="ok" live>
+              Open to internships
+            </Badge>
           </li>
         </ul>
 
