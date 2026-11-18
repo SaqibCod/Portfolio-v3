@@ -75,6 +75,9 @@ export function ProjectCard({
       className={cn(
         "min-w-0 rounded-lg border border-line bg-bg2 p-5",
         featured ? "md:rounded-xl md:p-7" : "md:rounded-2xl md:p-8",
+        // An upward shadow, so a card sliding over the pinned one beneath it
+        // reads as a stack rather than as a seam.
+        featured && "shadow-[0_-20px_50px_-30px_rgb(0_0_0/0.5)]",
       )}
     >
       <div
