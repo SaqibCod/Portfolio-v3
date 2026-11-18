@@ -39,6 +39,9 @@ export async function generateMetadata({
     title: project.title,
     description: project.summary,
     path: project.href,
+    // This segment ships `opengraph-image.tsx`, so the card is generated per
+    // project and must not be overridden by the site-wide default.
+    ownOgImage: true,
   });
 }
 

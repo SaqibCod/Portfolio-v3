@@ -10,6 +10,12 @@ export type BuildMetadataOptions = {
   path: string;
   /** Absolute or site-relative OG image. Defaults to the site OG image. */
   image?: string;
+  /**
+   * Set on a route that ships its own `opengraph-image` file. The image tags
+   * are then left out entirely so Next's file convention can emit them —
+   * anything set here would win over the generated card.
+   */
+  ownOgImage?: boolean;
   /** Set for pages that must stay out of search results. */
   noIndex?: boolean;
   /**
@@ -51,10 +57,12 @@ export function buildMetadata({
   image = defaultOgImage,
   noIndex = false,
   absoluteTitle = false,
+  ownOgImage = false,
 }: BuildMetadataOptions): Metadata {
   const canonicalPath = normalizePath(path);
   const url = absoluteUrl(canonicalPath);
   const imageUrl = absoluteUrl(image);
+  const images = ownOgImage ? {} : { images: [{ url: imageUrl, alt: title }] };
 
   return {
     title: absoluteTitle ? { absolute: title } : title,
@@ -67,13 +75,13 @@ export function buildMetadata({
       title,
       description,
       url,
-      images: [{ url: imageUrl, alt: title }],
+      ...images,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [imageUrl],
+      ...(ownOgImage ? {} : { images: [imageUrl] }),
     },
     ...(noIndex ? { robots: { index: false, follow: false } } : {}),
   };
