@@ -1,5 +1,5 @@
-import { JsonLd } from "@/components/seo/JsonLd";
 import { TechStackList } from "@/components/projects/TechStackList";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Container } from "@/components/ui/Container";
 import { PendingSlot } from "@/components/ui/PendingSlot";
 import { Section } from "@/components/ui/Section";
@@ -333,7 +333,7 @@ export default function TechPage() {
         ])}
       />
 
-      <Section className="pt-14 pb-14 md:pt-22 md:pb-18">
+      <Section spacing="none" className="pt-14 pb-14 md:pt-22 md:pb-18">
         <Container className="relative">
           <p className="eyebrow">Tech behind this site</p>
           <h1 className="display metal mt-4.5 max-w-[1000px] text-[10vw] md:text-[clamp(44px,8vw,120px)]">
@@ -380,7 +380,7 @@ export default function TechPage() {
       </Section>
 
       {/* How a request flows */}
-      <Section id="flow" inverted rounded className="mt-20 py-20 md:mt-30 md:py-30">
+      <Section id="flow" inverted rounded className="mt-20 md:mt-30">
         <Container>
           <div className="mb-9 flex flex-col items-start gap-4 md:flex-row md:items-end md:justify-between md:gap-6">
             <div>
@@ -457,7 +457,7 @@ export default function TechPage() {
       </Section>
 
       {/* API conventions */}
-      <Section rounded className="-mt-11 bg-bg py-20 md:py-30">
+      <Section rounded className="-mt-11 bg-bg">
         <Container>
           <BandHeading eyebrow="API conventions">House rules</BandHeading>
           <div className="mt-10 grid items-start gap-10 md:grid-cols-2 md:gap-12">
@@ -497,7 +497,7 @@ export default function TechPage() {
       </Section>
 
       {/* Privacy */}
-      <Section className="py-20">
+      <Section spacing="none" className="py-20">
         <Container>
           <BandHeading eyebrow="Privacy & security">No tracking</BandHeading>
           <ul
@@ -536,7 +536,7 @@ export default function TechPage() {
       </Section>
 
       {/* The toolbox */}
-      <Section className="pt-10 pb-35 md:pb-50">
+      <Section spacing="none" className="pt-10 pb-35 md:pb-50">
         <Container>
           <BandHeading eyebrow="Full stack">The toolbox</BandHeading>
           <div className="mt-8 grid gap-3.5 md:grid-cols-3">

@@ -51,7 +51,7 @@ unavailable API degrades a single card rather than the page. Errors are
 RFC 9457 Problem Details everywhere, and nothing public requires an account.
 
 <ArchDiagram
-  label="A visitor's browser loads pre-rendered Next.js pages. Live widgets on those pages call the Spring Boot API under /api/v1, which reads from PostgreSQL and from external services: the GitHub API, an LLM for chat, and email for notifications."
+  label="A visitor’s browser loads pre-rendered Next.js pages. Live widgets on those pages call the Spring Boot API under /api/v1, which reads from PostgreSQL and from external services: the GitHub API, an LLM for chat, and email for notifications."
   rows={[
     [
       { title: "Browser", sub: "anonymous · no cookies" },
@@ -86,7 +86,7 @@ RFC 9457 Problem Details everywhere, and nothing public requires an account.
     {
       title: "Static first, dynamic only where it earns it",
       body:
-        "Every page's text is server-rendered HTML with its own title, description, canonical URL and JSON-LD. The interactive extras — chat, presence, the command palette — never hold content that exists nowhere else, so turning JavaScript off costs you nothing but the extras.",
+        "Every page’s text is server-rendered HTML with its own title, description, canonical URL and JSON-LD. The interactive extras — chat, presence, the command palette — never hold content that exists nowhere else, so turning JavaScript off costs you nothing but the extras.",
     },
     {
       title: "No accounts, no cookies, no tracking",
@@ -96,7 +96,7 @@ RFC 9457 Problem Details everywhere, and nothing public requires an account.
     {
       title: "The OpenAPI contract is the source of truth",
       body:
-        "The frontend's API types are generated from the same YAML the backend implements, so a renamed field fails the typecheck instead of shipping a silently broken widget.",
+        "The frontend’s API types are generated from the same YAML the backend implements, so a renamed field fails the typecheck instead of shipping a silently broken widget.",
     },
   ]}
 />

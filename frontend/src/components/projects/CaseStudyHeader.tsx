@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { CoverFrame } from "@/components/projects/CoverFrame";
 import { ButtonLink } from "@/components/ui/Button";
+import { formatDate } from "@/lib/format";
 
 import type { Project } from "@/lib/projects";
 
@@ -9,7 +10,7 @@ type CaseStudyHeaderProps = {
   project: Project;
 };
 
-type MetaCell = { label: string; value: string };
+type MetaCell = { label: string; value: React.ReactNode };
 
 function MetaGrid({ cells }: { cells: MetaCell[] }) {
   return (
@@ -80,7 +81,14 @@ export function CaseStudyHeader({ project }: CaseStudyHeaderProps) {
           { label: "Role", value: project.role },
           { label: "Timeline", value: project.timeline },
           { label: "Stack", value: project.stack.join(" · ") },
-          { label: "Updated", value: project.updated },
+          {
+            label: "Updated",
+            value: (
+              <time dateTime={project.updated}>
+                {formatDate(project.updated)}
+              </time>
+            ),
+          },
         ]}
       />
 

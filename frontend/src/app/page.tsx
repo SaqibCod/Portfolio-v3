@@ -39,7 +39,7 @@ export default function Home() {
       <Services />
 
       {/* 03 — Selected work */}
-      <Section id="projects" rounded className="-mt-7 bg-bg py-20 md:-mt-11 md:py-30">
+      <Section id="projects" rounded className="-mt-7 bg-bg md:-mt-11">
         <Container>
           <div className="mb-10 flex flex-col items-start gap-4 md:mb-12 md:flex-row md:items-end md:justify-between md:gap-6">
             <div>
@@ -62,7 +62,7 @@ export default function Home() {
       </Section>
 
       {/* 04 — Currently building */}
-      <Section id="building" className="py-10 md:py-20">
+      <Section id="building" spacing="none" className="py-10 md:py-20">
         <Container>
           <p className="eyebrow">04 — Live from GitHub</p>
           <h2 className="display metal mt-4.5 text-[10vw] md:text-[clamp(44px,7vw,112px)]">
@@ -85,7 +85,7 @@ export default function Home() {
       <Education />
 
       {/* 06 — Guestbook */}
-      <Section id="guestbook" className="pt-0 pb-30 md:pb-42">
+      <Section id="guestbook" spacing="none" className="pb-30 md:pb-42">
         <Container>
           <div className="mb-8 flex flex-col items-start gap-4 md:mb-12 md:flex-row md:items-end md:justify-between md:gap-6">
             <div>

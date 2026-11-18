@@ -42,7 +42,7 @@ const services = [
  */
 export function Services() {
   return (
-    <Section id="skills" inverted rounded className="py-20 md:py-30">
+    <Section id="skills" inverted rounded>
       <Container>
         <div className="mb-10 flex flex-col items-start gap-4 md:mb-14 md:flex-row md:items-end md:justify-between md:gap-8">
           <div>
@@ -79,7 +79,7 @@ export function Services() {
               <TechStackList
                 items={service.stack}
                 label={`${service.title} tools`}
-                className="col-start-2 md:justify-end"
+                className="col-start-2 md:col-start-3 md:justify-end"
               />
             </li>
           ))}

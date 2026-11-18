@@ -10,6 +10,11 @@
    --------------------------------------------------------------------------- */
 
 :root {
+  /* Tells the browser which way to paint scrollbars, form controls and the
+     canvas behind the page. Declared here rather than left to next-themes, so
+     it is right from the first paint and with JavaScript off. */
+  color-scheme: light;
+
   /* Surfaces */
   --bg: #f4f3ef;
   --bg2: #ffffff;
@@ -36,6 +41,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   --bg: #08080a;
   --bg2: #131316;
   --line: #2a2a30;

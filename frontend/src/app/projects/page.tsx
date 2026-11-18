@@ -38,7 +38,7 @@ export default function ProjectsPage() {
         ])}
       />
 
-      <Section className="pt-14 pb-6 md:pt-24 md:pb-10">
+      <Section spacing="none" className="pt-14 pb-6 md:pt-24 md:pb-10">
         <Container className="relative">
           <p className="eyebrow">Selected work · {projects.length} projects</p>
           <h1 className="display metal mt-4.5 text-[10vw] md:text-[clamp(48px,9.2vw,132px)]">
@@ -66,13 +66,13 @@ export default function ProjectsPage() {
         </Container>
       </Section>
 
-      <Section className="pt-9 pb-22 md:pt-14 md:pb-30">
+      <Section spacing="none" className="pt-9 pb-22 md:pt-14 md:pb-30">
         <Container>
           <ProjectGrid projects={projects} label="All projects" />
         </Container>
       </Section>
 
-      <Section className="pt-0 pb-35 md:pb-50">
+      <Section spacing="none" className="pb-35 md:pb-50">
         <Container>
           <div className="flex flex-col items-start justify-between gap-8 rounded-xl bg-fg px-6 py-10 text-bg md:flex-row md:items-center md:rounded-footer md:px-14 md:py-18">
             <div>

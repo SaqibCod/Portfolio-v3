@@ -8,6 +8,14 @@ type SectionProps = React.ComponentPropsWithoutRef<"section"> & {
   inverted?: boolean;
   /** Rounds the top corners (44px, 28px on mobile), like `.round`. */
   rounded?: boolean;
+  /**
+   * `none` drops the default vertical rhythm so the caller can set its own.
+   *
+   * `cn` is a plain join rather than tailwind-merge, so a `py-*` passed in
+   * `className` would not replace the default — both would be emitted and the
+   * winner would depend on Tailwind's output order.
+   */
+  spacing?: "default" | "none";
 };
 
 /**
@@ -17,13 +25,15 @@ type SectionProps = React.ComponentPropsWithoutRef<"section"> & {
 export function Section({
   inverted = false,
   rounded = false,
+  spacing = "default",
   className,
   ...props
 }: SectionProps) {
   return (
     <section
       className={cn(
-        "relative py-20 md:py-30",
+        "relative",
+        spacing === "default" && "py-20 md:py-30",
         inverted && "inv-band",
         rounded && "rounded-t-xl md:rounded-t-band",
         className,

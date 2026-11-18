@@ -14,7 +14,7 @@ import { Section } from "@/components/ui/Section";
  */
 export function About() {
   return (
-    <Section id="about" className="py-27 text-center md:py-37">
+    <Section id="about" spacing="none" className="py-27 text-center md:py-37">
       <AboutObjects />
       <Container className="relative">
         <p className="eyebrow">01 — Who I am</p>

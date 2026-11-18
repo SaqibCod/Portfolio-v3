@@ -74,7 +74,7 @@ function Label({ children }: { children: React.ReactNode }) {
  */
 export function Education() {
   return (
-    <Section id="education" className="pt-0 pb-25 md:pb-37">
+    <Section id="education" spacing="none" className="pb-25 md:pb-37">
       <Container>
         <p className="eyebrow">05 — Education</p>
         <h2 className="display metal mt-4.5 text-[10vw] md:text-[clamp(44px,7vw,112px)]">

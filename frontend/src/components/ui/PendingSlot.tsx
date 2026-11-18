@@ -22,7 +22,10 @@ export function PendingSlot({ label, children, className }: PendingSlotProps) {
     <div
       role="note"
       className={cn(
-        "flex flex-col gap-2 rounded-lg border border-line border-dashed bg-bg2/40 p-5 md:rounded-card md:p-7",
+        // Opaque: these panels sit over the decorative shapes on the contact
+        // band, and a translucent ground would let a gradient bleed through
+        // the text.
+        "flex flex-col gap-2 rounded-lg border border-line border-dashed bg-bg2 p-5 md:rounded-card md:p-7",
         className,
       )}
     >

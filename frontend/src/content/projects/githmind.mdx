@@ -51,7 +51,7 @@ for example staying inside a free tier, or never answering without a citation.]
 
 A question typed in the browser goes to the Spring Boot API, which embeds it,
 retrieves the most similar code and commit chunks from the vector index, builds
-a prompt around them, and streams the model's reply back token by token. The
+a prompt around them, and streams the model’s reply back token by token. The
 sources arrive after the answer, so the citation list is only ever built from
 chunks that were actually in the prompt.
 
@@ -69,7 +69,7 @@ chunks that were actually in the prompt.
       { title: "pgvector", sub: "similarity search" },
     ],
   ]}
-  caption="[CONFIRM: adjust the boxes to match githMind's real components.]"
+  caption="[CONFIRM: adjust the boxes to match githMind’s real components.]"
 />
 
 <CodeBlock
@@ -105,7 +105,7 @@ public SseEmitter chat(@Valid @RequestBody ChatRequest request) {
 
 <DemoSlot
   label="githMind demo"
-  note="[CONFIRM] Add `demoUrl` to this file's meta and swap this slot for the live embed, or drop in a 60–90 second screen recording with captions."
+  note="[CONFIRM] Add `demoUrl` to this file’s meta and swap this slot for the live embed, or drop in a 60–90 second screen recording with captions."
 />
 
 ## Challenges & results
