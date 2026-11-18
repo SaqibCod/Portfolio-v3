@@ -70,7 +70,7 @@ export function buildMetadata({
     alternates: { canonical: canonicalPath },
     openGraph: {
       type: "website",
-      siteName: siteConfig.name,
+      siteName: siteConfig.fullName,
       locale: siteConfig.locale,
       title,
       description,

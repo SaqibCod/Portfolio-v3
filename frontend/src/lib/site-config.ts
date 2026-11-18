@@ -13,19 +13,26 @@ export type SocialLink = {
 /**
  * Single source of truth for the site's identity and navigation.
  *
- * Placeholder values match the Claude Design exports, which use bracketed
- * stand-ins. The real name, email, location and handles are confirmed in
- * phase 03 (see docs/plan/README.md, "Decisions to confirm").
+ * Anything still bracketed is a stand-in from the Claude Design exports and
+ * needs a real value (see docs/plan/README.md, "Decisions to confirm").
  */
 export const siteConfig = {
+  /**
+   * The short name the design puts in the hero, the footer wordmark and the
+   * copyright line. `fullName` is what every metadata and structured-data
+   * field uses instead — a search result should carry the whole name.
+   */
   name: "Saq",
+  fullName: "Saqib Choudhary",
   /** Wordmark: the trailing dot is accented in the design. */
   wordmark: "SAQ",
-  role: "Full-stack engineer",
-  tagline:
-    "Full-stack engineer building AI-powered products with Spring Boot, Next.js and LLMs.",
+  /** `Person.jobTitle`, and the suffix on the home page's `<title>`. */
+  role: "MCA student at IIT Patna",
+  /** The one line beside the hero's call to action. */
+  headline: "I build software end to end, with AI where it adds real value",
+  /** The meta description every page falls back to. Kept under 160 characters. */
   description:
-    "Full-stack engineer building AI-powered products with Spring Boot, Next.js and LLMs. Case studies, live GitHub activity and an AI that answers questions about my work.",
+    "Saqib Choudhary, MCA student at IIT Patna, building end-to-end software systems with Optimize tech and AI.",
   email: "hello@example.com",
   location: "[City, Country]",
   siteUrl: env.siteUrl,
@@ -34,8 +41,11 @@ export const siteConfig = {
   /** The hero portrait, also the `Person` JSON-LD image. */
   avatar: {
     src: "/avatar-smile-clear.png",
-    alt: "3D avatar of Saq, smiling",
+    alt: "3D avatar of Saqib Choudhary, smiling",
   },
+
+  /** `Person.affiliation` — where the degree is being taken. */
+  university: "Indian Institute of Technology Patna",
 
   /** `Person.knowsAbout` — the subjects the site is actually about. */
   knowsAbout: [

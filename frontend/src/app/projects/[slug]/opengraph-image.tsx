@@ -43,8 +43,8 @@ export default async function Image({
     (
       <OgCard
         eyebrow={project ? `Case study · ${project.kind}` : "Case study"}
-        title={project?.title ?? siteConfig.name}
-        subtitle={project?.summary ?? siteConfig.tagline}
+        title={project?.title ?? siteConfig.fullName}
+        subtitle={project?.summary ?? siteConfig.headline}
         footer={`${siteConfig.siteUrl.replace(/^https?:\/\//, "")}/projects/${slug}`}
       />
     ),

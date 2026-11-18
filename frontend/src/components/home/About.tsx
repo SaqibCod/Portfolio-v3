@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
+import { siteConfig } from "@/lib/site-config";
 
 /**
  * `.about` — section 01. The one paragraph that has to land, with the facts
@@ -28,15 +29,16 @@ export function About() {
           About me
         </h2>
         <p className="mx-auto mt-9 max-w-[760px] text-lg leading-snug font-medium md:text-[22px]">
-          I’m a software engineer who builds products end to end — from{" "}
-          <b className="font-extrabold text-fg">Spring Boot</b> services and{" "}
-          <b className="font-extrabold text-fg">RAG pipelines</b> to fast,
-          accessible <b className="font-extrabold text-fg">Next.js</b>{" "}
-          front-ends. Lately:{" "}
-          <b className="font-extrabold text-fg">githMind</b>, a
-          chat-with-your-repo tool, and{" "}
-          <b className="font-extrabold text-fg">Medi-Scan</b>, an AI
-          lab-report analyzer.
+          I’m {siteConfig.fullName}, a{" "}
+          <b className="font-extrabold text-fg">
+            first-year MCA student at IIT Patna
+          </b>
+          . I enjoy building{" "}
+          <b className="font-extrabold text-fg">complete systems</b>, from the
+          interface people use to the backend, data, and AI that power it. I’m
+          learning how software engineering is changing with AI, and I learn
+          best by{" "}
+          <b className="font-extrabold text-fg">shipping real projects</b>.
         </p>
 
         <ul
@@ -44,13 +46,13 @@ export function About() {
           className="mt-8 flex list-none flex-wrap justify-center gap-2.5"
         >
           <li>
-            <Badge>[CONFIRM: X] years building software</Badge>
+            <Badge>First-year MCA · IIT Patna</Badge>
           </li>
           <li>
-            <Badge>Based in [CONFIRM: City]</Badge>
+            <Badge>Based in [CONFIRM: City, Country]</Badge>
           </li>
           <li>
-            <Badge dot="ok">Open to [CONFIRM: role type]</Badge>
+            <Badge dot="ok">Open to [CONFIRM: internships / roles]</Badge>
           </li>
         </ul>
 

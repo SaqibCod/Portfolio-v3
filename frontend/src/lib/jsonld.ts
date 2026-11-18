@@ -20,14 +20,20 @@ export function personJsonLd(): JsonLdObject {
     "@context": SCHEMA,
     "@type": "Person",
     "@id": personId,
-    name: siteConfig.name,
+    name: siteConfig.fullName,
     jobTitle: siteConfig.role,
-    description: siteConfig.tagline,
+    description: siteConfig.description,
     url: siteConfig.siteUrl,
     image: absoluteUrl(siteConfig.avatar.src),
     email: `mailto:${siteConfig.email}`,
     sameAs: siteConfig.social.map((link) => link.href),
     knowsAbout: siteConfig.knowsAbout,
+    // Currently enrolled, so `affiliation` rather than `alumniOf` — the two
+    // say different things and a search engine reads them differently.
+    affiliation: {
+      "@type": "CollegeOrUniversity",
+      name: siteConfig.university,
+    },
   };
 }
 

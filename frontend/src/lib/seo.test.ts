@@ -104,12 +104,12 @@ describe("buildMetadata with ownOgImage", () => {
 describe("buildMetadata with absoluteTitle", () => {
   it("opts out of the layout's title template", () => {
     const metadata = buildMetadata({
-      title: "Saq — Full-stack engineer",
+      title: "Saqib Choudhary — MCA student at IIT Patna",
       description: "…",
       path: "/",
       absoluteTitle: true,
     });
 
-    expect(metadata.title).toEqual({ absolute: "Saq — Full-stack engineer" });
+    expect(metadata.title).toEqual({ absolute: "Saqib Choudhary — MCA student at IIT Patna" });
   });
 });

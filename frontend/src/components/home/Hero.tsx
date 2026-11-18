@@ -135,7 +135,7 @@ function Avatar() {
         // The label carries both the subject and the action: a button's own
         // name overrides any `alt` inside it, so describing the portrait on
         // the images would never be announced.
-        aria-label={`Portrait of ${siteConfig.name} — click to change the glasses`}
+        aria-label={`Portrait of ${siteConfig.fullName} — click to change the glasses`}
         className="relative block size-full cursor-pointer overflow-hidden rounded-full border-0 bg-black p-0 shadow-[0_0_0_1px_var(--line),0_40px_90px_-30px_var(--ring)] motion-safe:animate-[float_5.5s_ease-in-out_infinite]"
       >
         {/*
@@ -249,7 +249,7 @@ export function Hero() {
 
         <div className="mt-7 flex flex-col items-stretch gap-6 text-left md:mt-10 md:flex-row md:items-end md:justify-between md:gap-8">
           <p className="max-w-[360px] font-mono text-eyebrow leading-relaxed tracking-[0.04em] uppercase text-mute">
-            {siteConfig.tagline}
+            {siteConfig.headline}
           </p>
           <ButtonLink href="/#contact" variant="primary" className="max-md:w-full">
             Contact me

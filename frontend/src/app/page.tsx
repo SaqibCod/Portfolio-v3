@@ -18,11 +18,11 @@ import { siteConfig } from "@/lib/site-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = buildMetadata({
-  title: `${siteConfig.name} — ${siteConfig.role}`,
+  title: `${siteConfig.fullName} — ${siteConfig.role}`,
   description: siteConfig.description,
   path: "/",
-  // The home title already names the site; the layout's "%s | Saq" template
-  // would otherwise repeat it.
+  // The home title already names him; the layout's "%s | Saqib Choudhary"
+  // template would otherwise repeat it.
   absoluteTitle: true,
 });
 

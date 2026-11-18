@@ -17,35 +17,28 @@ type Entry = {
 };
 
 /**
- * [CONFIRM] Every value below is a placeholder taken from the design export.
- * Replace them with your real education history, or delete the entries you do
- * not want on the page.
+ * The MCA entry is real; everything still bracketed needs a value. Add or
+ * remove entries freely — the timeline draws itself from this list.
  */
 const entries: Entry[] = [
   {
-    years: "[2021 – 2025]",
-    status: "[Graduated / In progress]",
+    years: "[2026 – 2028]",
+    status: "In progress · first year",
     current: true,
-    qualification: "[Bachelor of Technology in Computer Science]",
-    institution: "[University name]",
-    place: "[City, Country]",
-    facts: ["[CGPA 8.6 / 10]", "[Honours / distinction]"],
-    coursework: [
-      "Data Structures & Algorithms",
-      "Database Systems",
-      "Operating Systems",
-      "Computer Networks",
-      "[Machine Learning]",
-    ],
-    note: "[Optional: final-year project, thesis or a highlight — one or two lines.]",
+    qualification: "Master of Computer Applications (MCA)",
+    institution: "Indian Institute of Technology Patna",
+    place: "Patna, India",
+    facts: ["[CONFIRM: CGPA]"],
+    coursework: ["[CONFIRM: list your first-year courses]"],
+    note: "[Optional: a project, a paper or a highlight — one or two lines.]",
   },
   {
-    years: "[2019 – 2021]",
+    years: "[YYYY – YYYY]",
     status: "Completed",
-    qualification: "[Higher Secondary · Science & Maths]",
-    institution: "[School / college name]",
-    place: "[City]",
-    facts: ["[Score 92%]", "[Board]"],
+    qualification: "[CONFIRM: bachelor’s degree, e.g. BCA or B.Sc Computer Science]",
+    institution: "[University name]",
+    place: "[City, Country]",
+    facts: ["[CONFIRM: CGPA or percentage]"],
   },
 ];
 

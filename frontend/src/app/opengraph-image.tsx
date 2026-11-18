@@ -8,7 +8,7 @@ import {
 } from "@/components/seo/OgCard";
 import { siteConfig } from "@/lib/site-config";
 
-export const alt = `${siteConfig.name} — ${siteConfig.role}`;
+export const alt = `${siteConfig.fullName} — ${siteConfig.role}`;
 export const size = ogSize;
 export const contentType = ogContentType;
 
@@ -18,8 +18,8 @@ export default async function Image() {
     (
       <OgCard
         eyebrow={siteConfig.role}
-        title={siteConfig.name}
-        subtitle={siteConfig.tagline}
+        title={siteConfig.fullName}
+        subtitle={siteConfig.headline}
         footer={siteConfig.siteUrl.replace(/^https?:\/\//, "")}
       />
     ),

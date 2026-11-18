@@ -14,7 +14,8 @@ describe("personJsonLd", () => {
   });
 
   it("carries the fields a rich result needs", () => {
-    expect(person.name).toBe(siteConfig.name);
+    // The full name, never the short one the hero and footer display.
+    expect(person.name).toBe(siteConfig.fullName);
     expect(person.jobTitle).toBe(siteConfig.role);
     expect(person.url).toBe(siteConfig.siteUrl);
     expect(person.image).toMatch(/^https:\/\//);
@@ -23,6 +24,14 @@ describe("personJsonLd", () => {
 
   it("lists every social profile in sameAs", () => {
     expect(person.sameAs).toEqual(siteConfig.social.map((link) => link.href));
+  });
+
+  it("states the current affiliation rather than alumni status", () => {
+    expect(person.affiliation).toEqual({
+      "@type": "CollegeOrUniversity",
+      name: siteConfig.university,
+    });
+    expect(person.alumniOf).toBeUndefined();
   });
 });
 
