@@ -4,7 +4,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import dev.saq.testsupport.TestAdminController;
 import dev.saq.testsupport.TestEndpointsConfig;
+import dev.saq.testsupport.TestEndpointsController;
 import dev.saq.testsupport.WebInfrastructureTestConfig;
 
 import org.junit.jupiter.api.Test;
@@ -21,7 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * {@code /problems/{slug}} structure untouched. This is what makes swapping the placeholder domain
  * a configuration change rather than a code change.
  */
-@WebMvcTest
+@WebMvcTest(controllers = { TestEndpointsController.class, TestAdminController.class })
 @Import({ TestEndpointsConfig.class, WebInfrastructureTestConfig.class })
 @ActiveProfiles("test")
 @TestPropertySource(properties = "app.api.base-url=https://api.saq.dev")

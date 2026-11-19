@@ -12,6 +12,7 @@ describe("sitemap", () => {
   it("lists every static route", () => {
     expect(urls).toContain(siteConfig.siteUrl);
     expect(urls).toContain(`${siteConfig.siteUrl}/projects`);
+    expect(urls).toContain(`${siteConfig.siteUrl}/contact`);
     expect(urls).toContain(`${siteConfig.siteUrl}/tech`);
   });
 

@@ -5,7 +5,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dev.saq.portfolio.model.RateLimitPolicy;
+import dev.saq.testsupport.TestAdminController;
 import dev.saq.testsupport.TestEndpointsConfig;
+import dev.saq.testsupport.TestEndpointsController;
 import dev.saq.testsupport.WebInfrastructureTestConfig;
 
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
  * <p>Every test uses its own remote address: buckets are keyed by hashed IP, so distinct addresses
  * keep the tests independent despite the shared application context.
  */
-@WebMvcTest
+@WebMvcTest(controllers = { TestEndpointsController.class, TestAdminController.class })
 @Import({ TestEndpointsConfig.class, WebInfrastructureTestConfig.class })
 @ActiveProfiles("test")
 class RateLimitInterceptorTest {

@@ -1,15 +1,14 @@
+import { ContactForm } from "@/components/contact/ContactForm";
 import { ContactObjects } from "@/components/home/FloatingObjects";
 import { Container } from "@/components/ui/Container";
-import { PendingSlot } from "@/components/ui/PendingSlot";
 import { Section } from "@/components/ui/Section";
 import { siteConfig } from "@/lib/site-config";
 
 /**
  * `.contact` — section 07, on the inverted band.
  *
- * The address and the invitation are static HTML, so the page is reachable
- * even with the API down; the form itself is a later phase and is marked as a
- * slot rather than rendered as a dead input.
+ * The address and the invitation stay static HTML, so there is always a way to
+ * reach me even with the API down; the form beside them is the live path.
  */
 export function ContactBand() {
   return (
@@ -38,11 +37,7 @@ export function ContactBand() {
           </p>
         </div>
 
-        <PendingSlot label="Contact form">
-          The form that posts to <code className="font-mono">/api/v1/contact</code>{" "}
-          — with its bot check, per-field validation and rate limits — arrives
-          with the contact phase. Until then, email is the way through.
-        </PendingSlot>
+        <ContactForm />
       </Container>
     </Section>
   );

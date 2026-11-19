@@ -34,8 +34,22 @@ public class ClientIpUtils {
 
 	/** The caller's IP address, or {@code "unknown"} when the container cannot supply one. */
 	public String resolve(HttpServletRequest request) {
+		String remoteAddress = resolveOrNull(request);
+		return (remoteAddress == null) ? UNKNOWN_IP : remoteAddress;
+	}
+
+	/**
+	 * The caller's IP address, or {@code null} when the container cannot supply one.
+	 *
+	 * <p>Preferred over {@link #resolve} wherever the address is handed to something that must
+	 * see a real address or nothing at all — Cloudflare's {@code remoteip}, for instance, where
+	 * the {@code "unknown"} sentinel would be an invalid value rather than an absent one.
+	 * {@link #hash} accepts {@code null} and folds it onto the same sentinel, so a caller can
+	 * pass the nullable form straight through to both.
+	 */
+	public String resolveOrNull(HttpServletRequest request) {
 		String remoteAddress = request.getRemoteAddr();
-		return (remoteAddress == null || remoteAddress.isBlank()) ? UNKNOWN_IP : remoteAddress;
+		return (remoteAddress == null || remoteAddress.isBlank()) ? null : remoteAddress;
 	}
 
 	/** Lowercase hex {@code SHA-256(salt + ip)}. */

@@ -11,6 +11,7 @@ const pageUpdated = {
   home: "2026-11-18",
   projects: "2026-11-18",
   tech: "2026-11-18",
+  contact: "2026-11-19",
 } as const;
 
 /**
@@ -33,6 +34,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: pageUpdated.projects,
       changeFrequency: "weekly",
       priority: 0.8,
+    },
+    {
+      url: absoluteUrl("/contact"),
+      lastModified: pageUpdated.contact,
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
     {
       url: absoluteUrl("/tech"),

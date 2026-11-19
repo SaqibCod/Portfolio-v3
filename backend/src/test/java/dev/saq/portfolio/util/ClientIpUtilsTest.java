@@ -35,6 +35,38 @@ class ClientIpUtilsTest {
 	}
 
 	@Test
+	void resolveOrNullReportsAnAddressItHas() {
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		request.setRemoteAddr("203.0.113.7");
+
+		assertThat(clientIpUtils.resolveOrNull(request)).isEqualTo("203.0.113.7");
+	}
+
+	@Test
+	void resolveOrNullReportsAbsenceRatherThanTheSentinel() {
+		// Callers that pass the address to a third party need "no address", not the string
+		// "unknown", which would be an invalid value rather than an omitted one.
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		request.setRemoteAddr(null);
+
+		assertThat(clientIpUtils.resolveOrNull(request)).isNull();
+	}
+
+	@Test
+	void aBlankAddressCountsAsNoAddress() {
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		request.setRemoteAddr("   ");
+
+		assertThat(clientIpUtils.resolveOrNull(request)).isNull();
+		assertThat(clientIpUtils.resolve(request)).isEqualTo("unknown");
+	}
+
+	@Test
+	void hashFoldsAnAbsentAddressOntoTheSentinel() {
+		assertThat(clientIpUtils.hash(null)).isEqualTo(clientIpUtils.hash("unknown"));
+	}
+
+	@Test
 	void hashIsSaltedSha256Hex() throws Exception {
 		MessageDigest digest = MessageDigest.getInstance("SHA-256");
 		digest.update(SALT.getBytes(StandardCharsets.UTF_8));

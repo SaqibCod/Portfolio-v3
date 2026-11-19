@@ -1,6 +1,6 @@
 package dev.saq.portfolio.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -8,6 +8,8 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+
+import java.util.concurrent.CompletableFuture;
 
 import dev.saq.portfolio.client.ResendClient;
 import dev.saq.testsupport.TestAppProperties;
@@ -69,12 +71,28 @@ class ResendEmailServiceTest {
 	}
 
 	@Test
-	void swallowsAnUpstreamFailureSoTheCallerIsNeverAffected() {
+	void completesNormallyWhenResendAcceptsTheMessage() {
+		resend.expect(requestTo(EMAILS_URL)).andRespond(withSuccess("""
+				{"id": "0c7b5f2e-0000-0000-0000-000000000000"}""", MediaType.APPLICATION_JSON));
+
+		CompletableFuture<Void> result = emailService.send(TestAppProperties.OWNER_EMAIL,
+				"New contact message", "Hello there.", null);
+
+		assertThat(result).isCompletedWithValue(null);
+		resend.verify();
+	}
+
+	@Test
+	void reportsAnUpstreamFailureWithoutThrowingAtTheCallSite() {
 		resend.expect(requestTo(EMAILS_URL)).andRespond(withServerError());
 
-		assertThatCode(() -> emailService.send(TestAppProperties.OWNER_EMAIL, "New contact message",
-				"Hello there.", null)).doesNotThrowAnyException();
+		// Fire and forget: the caller has already been answered, so reaching the next line at all
+		// is the assertion that nothing was thrown at it. The failure still has to be visible in
+		// the result, or a delivery status could never be recorded.
+		CompletableFuture<Void> result = emailService.send(TestAppProperties.OWNER_EMAIL,
+				"New contact message", "Hello there.", null);
 
+		assertThat(result).isCompletedExceptionally();
 		resend.verify();
 	}
 

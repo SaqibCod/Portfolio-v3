@@ -30,6 +30,8 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_SITE_URL: "https://example.com",
       NEXT_PUBLIC_API_BASE_URL: "https://api.example.com",
+      // Cloudflare's documented "always passes" test site key.
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
     },
   },
 });
