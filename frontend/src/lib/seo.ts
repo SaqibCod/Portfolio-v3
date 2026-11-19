@@ -10,8 +10,19 @@ export type BuildMetadataOptions = {
   path: string;
   /** Absolute or site-relative OG image. Defaults to the site OG image. */
   image?: string;
+  /**
+   * Set on a route that ships its own `opengraph-image` file. The image tags
+   * are then left out entirely so Next's file convention can emit them —
+   * anything set here would win over the generated card.
+   */
+  ownOgImage?: boolean;
   /** Set for pages that must stay out of search results. */
   noIndex?: boolean;
+  /**
+   * Skips the root layout's `%s | Saq` template. Set on the home page, whose
+   * title already names the site and would otherwise read "Saq — … | Saq".
+   */
+  absoluteTitle?: boolean;
 };
 
 /** Normalises a path to a single leading slash and no trailing slash. */
@@ -29,8 +40,8 @@ export function absoluteUrl(pathOrUrl: string): string {
 }
 
 /**
- * Next serves this path from `app/opengraph-image.tsx`, which phase 03 adds
- * along with the rest of the OG work. Until then the URL resolves to a 404.
+ * Served by `app/opengraph-image.tsx` — the branded card every page falls
+ * back to. A route with its own `opengraph-image` overrides it automatically.
  */
 export const defaultOgImage = "/opengraph-image";
 
@@ -45,29 +56,32 @@ export function buildMetadata({
   path,
   image = defaultOgImage,
   noIndex = false,
+  absoluteTitle = false,
+  ownOgImage = false,
 }: BuildMetadataOptions): Metadata {
   const canonicalPath = normalizePath(path);
   const url = absoluteUrl(canonicalPath);
   const imageUrl = absoluteUrl(image);
+  const images = ownOgImage ? {} : { images: [{ url: imageUrl, alt: title }] };
 
   return {
-    title,
+    title: absoluteTitle ? { absolute: title } : title,
     description,
     alternates: { canonical: canonicalPath },
     openGraph: {
       type: "website",
-      siteName: siteConfig.name,
+      siteName: siteConfig.fullName,
       locale: siteConfig.locale,
       title,
       description,
       url,
-      images: [{ url: imageUrl, alt: title }],
+      ...images,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [imageUrl],
+      ...(ownOgImage ? {} : { images: [imageUrl] }),
     },
     ...(noIndex ? { robots: { index: false, follow: false } } : {}),
   };

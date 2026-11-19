@@ -1,0 +1,134 @@
+export const meta = {
+  title: "githMind",
+  kind: "AI · Full-stack",
+  summary:
+    "Chat with any GitHub repository — ask about code, architecture and history, and get answers grounded in the repo itself.",
+  // [CONFIRM] Replace both dates with the real ones. `date` orders the list
+  // and the card numbering; `updated` is what the sitemap publishes.
+  date: "2026-09-20",
+  updated: "2026-11-18",
+  tags: ["AI", "Backend", "Frontend"],
+  stack: ["Next.js", "Spring Boot", "RAG", "PostgreSQL", "pgvector"],
+  featured: true,
+  role: "[CONFIRM: solo — design, backend, frontend]",
+  timeline: "[CONFIRM: Month YYYY – Month YYYY]",
+  // [CONFIRM] Add `demoUrl` and `repoUrl` once the project is deployed and
+  // the repository is public. Until then the page shows labelled slots.
+};
+
+## Overview
+
+githMind answers questions about a GitHub repository in plain language: what a
+module does, why a file changed, where a behaviour is implemented. You point it
+at a repo, it indexes the code and history once, and from then on every answer
+cites the files it came from.
+
+[CONFIRM: two or three sentences on who it is for and why you built it — the
+moment you realised an unfamiliar codebase needed this.]
+
+<MetricTiles
+  items={[
+    { value: "[N]", label: "[e.g. repositories indexed]" },
+    { value: "[N s]", label: "[e.g. median time to first token]" },
+    { value: "[N%]", label: "[e.g. answers returned with citations]" },
+  ]}
+/>
+
+## The problem
+
+Reading an unfamiliar codebase is mostly navigation, not comprehension. You
+open a file, follow a call three layers down, lose the thread, and start again.
+Search finds the string but not the reason, and the commit that explains it is
+600 commits back.
+
+[CONFIRM: one concrete scenario from your own experience beats a list of
+grievances — the repo you had to understand, and what it cost you.]
+
+[CONFIRM: what existing tools get wrong, and the constraint you set yourself —
+for example staying inside a free tier, or never answering without a citation.]
+
+## Architecture
+
+A question typed in the browser goes to the Spring Boot API, which embeds it,
+retrieves the most similar code and commit chunks from the vector index, builds
+a prompt around them, and streams the model’s reply back token by token. The
+sources arrive after the answer, so the citation list is only ever built from
+chunks that were actually in the prompt.
+
+<ArchDiagram
+  label="A question flows from the Next.js chat UI to the Spring Boot API, which retrieves matching chunks from the vector index and streams an LLM answer back. The index itself is built by an ingestion step that reads repository files and history from the GitHub API, then chunks and embeds them."
+  rows={[
+    [
+      { title: "Next.js UI", sub: "chat · SSE client" },
+      { title: "Spring Boot API", sub: "retrieve · prompt · stream", accent: true },
+      { title: "[LLM]", sub: "answer generation" },
+    ],
+    [
+      { title: "GitHub API", sub: "repo files · history" },
+      { title: "Ingestion", sub: "chunk · embed" },
+      { title: "pgvector", sub: "similarity search" },
+    ],
+  ]}
+  caption="[CONFIRM: adjust the boxes to match githMind’s real components.]"
+/>
+
+<CodeBlock
+  filename="ChatController.java"
+  code={`@PostMapping(value = "/chat", produces = TEXT_EVENT_STREAM_VALUE)
+public SseEmitter chat(@Valid @RequestBody ChatRequest request) {
+    return chatService.stream(request); // tokens -> sources -> done
+}`}
+/>
+
+## Key decisions
+
+<Decisions
+  items={[
+    {
+      title: "[CONFIRM: how code is chunked]",
+      body:
+        "[What you chose — by symbol, by file, by sliding window — the alternative you rejected, and what it cost you in retrieval quality.]",
+    },
+    {
+      title: "Streaming answers over SSE",
+      body:
+        "A grounded answer takes seconds to assemble, and a spinner for that long reads as broken. Server-sent events let the first tokens land almost immediately, with the citation list following once the answer is complete.",
+    },
+    {
+      title: "[CONFIRM: keeping it inside a free tier]",
+      body: "[The trade-off you accepted, and where it still bites.]",
+    },
+  ]}
+/>
+
+## Demo
+
+<DemoSlot
+  label="githMind demo"
+  note="[CONFIRM] Add `demoUrl` to this file’s meta and swap this slot for the live embed, or drop in a 60–90 second screen recording with captions."
+/>
+
+## Challenges & results
+
+<TwoUp
+  items={[
+    {
+      eyebrow: "Hardest bug",
+      body: "[What broke, how you tracked it down, and what actually fixed it.]",
+    },
+    {
+      eyebrow: "What I learned",
+      body: "[The one lesson you would carry into the next project.]",
+    },
+  ]}
+/>
+
+### What I would do next
+
+<Ticks
+  items={[
+    "[CONFIRM: next improvement]",
+    "[CONFIRM: next improvement]",
+    "[CONFIRM: next improvement]",
+  ]}
+/>

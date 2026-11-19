@@ -32,13 +32,13 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.siteUrl),
   title: {
-    default: `${siteConfig.name} — ${siteConfig.role}`,
-    template: `%s | ${siteConfig.name}`,
+    default: `${siteConfig.fullName} — ${siteConfig.role}`,
+    template: `%s | ${siteConfig.fullName}`,
   },
   description: siteConfig.description,
-  applicationName: siteConfig.name,
-  authors: [{ name: siteConfig.name, url: siteConfig.siteUrl }],
-  creator: siteConfig.name,
+  applicationName: siteConfig.fullName,
+  authors: [{ name: siteConfig.fullName, url: siteConfig.siteUrl }],
+  creator: siteConfig.fullName,
   robots: { index: true, follow: true },
   icons: { icon: "/favicon.ico" },
 };

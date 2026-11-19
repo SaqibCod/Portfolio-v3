@@ -81,3 +81,35 @@ describe("buildMetadata", () => {
     });
   });
 });
+
+describe("buildMetadata with ownOgImage", () => {
+  const metadata = buildMetadata({
+    title: "githMind",
+    description: "Chat with any GitHub repository.",
+    path: "/projects/githmind",
+    ownOgImage: true,
+  });
+
+  it("leaves the image tags to the route's opengraph-image file", () => {
+    expect(metadata.openGraph?.images).toBeUndefined();
+    expect(metadata.twitter?.images).toBeUndefined();
+  });
+
+  it("still sets everything else", () => {
+    expect(metadata.alternates?.canonical).toBe("/projects/githmind");
+    expect(metadata.openGraph?.title).toBe("githMind");
+  });
+});
+
+describe("buildMetadata with absoluteTitle", () => {
+  it("opts out of the layout's title template", () => {
+    const metadata = buildMetadata({
+      title: "Saqib Choudhary — MCA student at IIT Patna",
+      description: "…",
+      path: "/",
+      absoluteTitle: true,
+    });
+
+    expect(metadata.title).toEqual({ absolute: "Saqib Choudhary — MCA student at IIT Patna" });
+  });
+});

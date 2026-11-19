@@ -13,23 +13,51 @@ export type SocialLink = {
 /**
  * Single source of truth for the site's identity and navigation.
  *
- * Placeholder values match the Claude Design exports, which use bracketed
- * stand-ins. The real name, email, location and handles are confirmed in
- * phase 03 (see docs/plan/README.md, "Decisions to confirm").
+ * Anything still bracketed is a stand-in from the Claude Design exports and
+ * needs a real value (see docs/plan/README.md, "Decisions to confirm").
  */
 export const siteConfig = {
+  /**
+   * The short name the design puts in the hero, the footer wordmark and the
+   * copyright line. `fullName` is what every metadata and structured-data
+   * field uses instead — a search result should carry the whole name.
+   */
   name: "Saq",
+  fullName: "Saqib Choudhary",
   /** Wordmark: the trailing dot is accented in the design. */
   wordmark: "SAQ",
-  role: "Full-stack engineer",
-  tagline:
-    "Full-stack engineer building AI-powered products with Spring Boot, Next.js and LLMs.",
+  /** `Person.jobTitle`, and the suffix on the home page's `<title>`. */
+  role: "MCA student at IIT Patna",
+  /** The one line beside the hero's call to action. */
+  headline: "I build software end to end, with AI where it adds real value",
+  /** The meta description every page falls back to. Kept under 160 characters. */
   description:
-    "Full-stack engineer building AI-powered products with Spring Boot, Next.js and LLMs. Case studies, live GitHub activity and an AI that answers questions about my work.",
-  email: "hello@example.com",
-  location: "[City, Country]",
+    "Saqib Choudhary, MCA student at IIT Patna, building end-to-end software systems with Optimize tech and AI.",
+  email: "saqibc097@gmail.com",
+  location: "Delhi, India",
   siteUrl: env.siteUrl,
   locale: "en_US",
+
+  /** The hero portrait, also the `Person` JSON-LD image. */
+  avatar: {
+    src: "/avatar-smile-clear.png",
+    alt: "3D avatar of Saqib Choudhary, smiling",
+  },
+
+  /** `Person.affiliation` — where the degree is being taken. */
+  university: "Indian Institute of Technology Patna",
+
+  /** `Person.knowsAbout` — the subjects the site is actually about. */
+  knowsAbout: [
+    "Java",
+    "Spring Boot",
+    "Spring AI",
+    "Next.js",
+    "React",
+    "TypeScript",
+    "PostgreSQL",
+    "Retrieval-augmented generation",
+  ],
 
   nav: [
     { href: "/#about", label: "About" },
@@ -39,10 +67,18 @@ export const siteConfig = {
     { href: "/#contact", label: "Contact" },
   ] satisfies NavItem[],
 
+  /**
+   * These are also `Person.sameAs`, which is how a search engine ties the
+   * profiles to the person — so each one has to be a canonical profile URL.
+   * Tracking query strings are stripped, and a network with no profile yet is
+   * left out rather than pointed at its homepage.
+   */
   social: [
-    { href: "https://github.com/", label: "GitHub" },
-    { href: "https://linkedin.com/", label: "LinkedIn" },
-    { href: "https://x.com/", label: "X / Twitter" },
+    { href: "https://github.com/SaqibCod", label: "GitHub" },
+    {
+      href: "https://www.linkedin.com/in/saqib-chaudhary09/",
+      label: "LinkedIn",
+    },
   ] satisfies SocialLink[],
 
   /** Footer "Site" column. */

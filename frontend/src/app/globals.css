@@ -10,6 +10,11 @@
    --------------------------------------------------------------------------- */
 
 :root {
+  /* Tells the browser which way to paint scrollbars, form controls and the
+     canvas behind the page. Declared here rather than left to next-themes, so
+     it is right from the first paint and with JavaScript off. */
+  color-scheme: light;
+
   /* Surfaces */
   --bg: #f4f3ef;
   --bg2: #ffffff;
@@ -36,6 +41,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   --bg: #08080a;
   --bg2: #131316;
   --line: #2a2a30;
@@ -319,4 +326,48 @@
 @utility grad {
   background: var(--grad);
   box-shadow: var(--grad-shadow);
+}
+
+/* Case-study prose. The export numbers each section heading with a small mono
+   counter in the accent colour and divides sections with a hairline, so the
+   numbering is a CSS counter rather than something authors repeat in MDX. */
+@utility case-body {
+  counter-reset: case-section;
+
+  & > h2 {
+    counter-increment: case-section;
+  }
+
+  & > h2::before {
+    content: counter(case-section, decimal-leading-zero);
+    margin-right: 16px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+    font-stretch: 100%;
+    letter-spacing: 0;
+    color: var(--ac1);
+  }
+}
+
+/* The tech strip's horizontal marquee. The track holds the list twice, so
+   translating by half its width loops seamlessly. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* A soft vertical drift, for the hero avatar. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
 }
