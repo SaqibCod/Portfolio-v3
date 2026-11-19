@@ -7,7 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import dev.saq.testsupport.TestAdminController;
 import dev.saq.testsupport.TestEndpointsConfig;
+import dev.saq.testsupport.TestEndpointsController;
 import dev.saq.testsupport.WebInfrastructureTestConfig;
 
 import org.hamcrest.Matchers;
@@ -24,7 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Every response must be {@code application/problem+json} and carry {@code type}, {@code title}
  * and {@code status}, matching the contract's Problem schema.
  */
-@WebMvcTest
+@WebMvcTest(controllers = { TestEndpointsController.class, TestAdminController.class })
 @Import({ TestEndpointsConfig.class, WebInfrastructureTestConfig.class })
 @ActiveProfiles("test")
 class GlobalExceptionHandlerTest {

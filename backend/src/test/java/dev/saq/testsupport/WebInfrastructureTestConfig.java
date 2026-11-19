@@ -17,6 +17,12 @@ import org.springframework.context.annotation.Bean;
  * it loads no {@code @Service} or {@code @Component} they depend on, and it does not apply
  * {@code @ConfigurationPropertiesScan}. The real implementations are used rather than mocks, so
  * slice tests exercise the actual behaviour.
+ *
+ * <p>Tests that use this pair their {@code @WebMvcTest} with
+ * {@code controllers = { TestEndpointsController.class, TestAdminController.class }}. These slices
+ * are about the infrastructure, not about any real endpoint, and a bare {@code @WebMvcTest} scans
+ * every {@code @Controller} in the application — so each feature phase would otherwise break them
+ * with a controller whose collaborators this configuration knows nothing about.
  */
 @TestConfiguration(proxyBeanMethods = false)
 @EnableConfigurationProperties(AppProperties.class)

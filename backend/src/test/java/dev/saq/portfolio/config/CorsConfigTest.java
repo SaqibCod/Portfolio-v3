@@ -4,7 +4,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import dev.saq.testsupport.TestAdminController;
 import dev.saq.testsupport.TestEndpointsConfig;
+import dev.saq.testsupport.TestEndpointsController;
 import dev.saq.testsupport.WebInfrastructureTestConfig;
 
 import org.junit.jupiter.api.Test;
@@ -15,7 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** The API answers preflight requests from the configured origin only. */
-@WebMvcTest
+@WebMvcTest(controllers = { TestEndpointsController.class, TestAdminController.class })
 @Import({ TestEndpointsConfig.class, WebInfrastructureTestConfig.class })
 @ActiveProfiles("test")
 class CorsConfigTest {

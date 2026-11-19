@@ -5,8 +5,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import dev.saq.testsupport.TestAdminController;
 import dev.saq.testsupport.TestAppProperties;
 import dev.saq.testsupport.TestEndpointsConfig;
+import dev.saq.testsupport.TestEndpointsController;
 import dev.saq.testsupport.WebInfrastructureTestConfig;
 
 import org.hamcrest.Matchers;
@@ -18,7 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** {@code /api/v1/admin/**} is reachable with the owner's token and with nothing else. */
-@WebMvcTest
+@WebMvcTest(controllers = { TestEndpointsController.class, TestAdminController.class })
 @Import({ TestEndpointsConfig.class, WebInfrastructureTestConfig.class })
 @ActiveProfiles("test")
 class AdminTokenFilterTest {
