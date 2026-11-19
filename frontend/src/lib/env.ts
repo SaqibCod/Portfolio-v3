@@ -10,6 +10,14 @@ import { z } from "zod";
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.url({ protocol: /^https?$/ }),
   NEXT_PUBLIC_API_BASE_URL: z.url({ protocol: /^https?$/ }),
+  /**
+   * Cloudflare Turnstile site key for the contact form. Public by design — it
+   * identifies the widget to Cloudflare and is readable in any page that
+   * renders one. The matching secret key never leaves the backend.
+   */
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z
+    .string()
+    .min(1, "Required — use a Cloudflare test site key for local development"),
 });
 
 /** Strips a trailing slash so callers can always join with `/path`. */
@@ -22,6 +30,7 @@ function parsePublicEnv() {
     // Referenced statically so Next can inline the values at build time.
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   });
 
   if (!parsed.success) {
@@ -38,6 +47,7 @@ function parsePublicEnv() {
   return {
     siteUrl: withoutTrailingSlash(parsed.data.NEXT_PUBLIC_SITE_URL),
     apiBaseUrl: withoutTrailingSlash(parsed.data.NEXT_PUBLIC_API_BASE_URL),
+    turnstileSiteKey: parsed.data.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   };
 }
 
