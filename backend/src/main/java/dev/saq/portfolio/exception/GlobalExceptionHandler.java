@@ -97,6 +97,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return type == null || "about:blank".equals(type.toString());
 	}
 
+	/**
+	 * 400 — a pagination cursor could not be decoded.
+	 *
+	 * <p>Reported as a field error on {@code cursor} so it is indistinguishable in shape from any
+	 * other rejected parameter; the exception's own message is the detail, and the offending value
+	 * is never echoed back.
+	 */
+	@ExceptionHandler(InvalidCursorException.class)
+	ProblemDetail handleInvalidCursor(InvalidCursorException ex) {
+		ProblemDetail body = problem(HttpStatus.BAD_REQUEST, problemTypes.validation(),
+				"Validation failed", ex.getMessage());
+		body.setProperty("errors",
+				List.of(error("cursor", "is not a cursor this API issued; omit it to start over")));
+		return body;
+	}
+
 	/** 404 */
 	@ExceptionHandler(NotFoundException.class)
 	ProblemDetail handleNotFound(NotFoundException ex) {

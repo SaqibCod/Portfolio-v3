@@ -67,6 +67,19 @@ class GlobalExceptionHandlerTest {
 	}
 
 	@Test
+	void invalidCursorReturns400AsAFieldErrorOnCursor() throws Exception {
+		mockMvc.perform(get("/api/v1/test/invalid-cursor"))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().contentTypeCompatibleWith(PROBLEM_JSON))
+				.andExpect(jsonPath("$.type").value("https://api.example.com/problems/validation"))
+				.andExpect(jsonPath("$.title").value("Validation failed"))
+				.andExpect(jsonPath("$.status").value(400))
+				.andExpect(jsonPath("$.errors[0].field").value("cursor"))
+				.andExpect(jsonPath("$.errors[0].message",
+						Matchers.not(Matchers.blankOrNullString())));
+	}
+
+	@Test
 	void notFoundExceptionReturns404() throws Exception {
 		mockMvc.perform(get("/api/v1/test/not-found"))
 				.andExpect(status().isNotFound())

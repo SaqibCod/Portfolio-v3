@@ -1,6 +1,7 @@
 package dev.saq.testsupport;
 
 import dev.saq.portfolio.annotation.RateLimited;
+import dev.saq.portfolio.exception.InvalidCursorException;
 import dev.saq.portfolio.exception.NotFoundException;
 import dev.saq.portfolio.exception.RateLimitedException;
 import dev.saq.portfolio.exception.TurnstileFailedException;
@@ -52,6 +53,12 @@ public class TestEndpointsController {
 	@PostMapping("/validate")
 	String validate(@Valid @RequestBody TestPayload payload) {
 		return payload.name();
+	}
+
+	/** 400: an undecodable pagination cursor. */
+	@GetMapping("/invalid-cursor")
+	String invalidCursor() {
+		throw new InvalidCursorException("Cursor is malformed.");
 	}
 
 	/** 404 */
