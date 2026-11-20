@@ -14,6 +14,7 @@ describe("sitemap", () => {
     expect(urls).toContain(`${siteConfig.siteUrl}/projects`);
     expect(urls).toContain(`${siteConfig.siteUrl}/contact`);
     expect(urls).toContain(`${siteConfig.siteUrl}/tech`);
+    expect(urls).toContain(`${siteConfig.siteUrl}/guestbook`);
   });
 
   it("lists every project slug", () => {
@@ -42,7 +43,12 @@ describe("sitemap", () => {
 
   it("omits routes that do not exist yet", () => {
     expect(urls).not.toContain(`${siteConfig.siteUrl}/status`);
-    expect(urls).not.toContain(`${siteConfig.siteUrl}/guestbook`);
+  });
+
+  it("never lists the owner's moderation page", () => {
+    // /admin exists but is noindex and disallowed in robots.txt. Listing it
+    // here would advertise the URL it is the whole point of not advertising.
+    expect(urls).not.toContain(`${siteConfig.siteUrl}/admin`);
   });
 });
 
