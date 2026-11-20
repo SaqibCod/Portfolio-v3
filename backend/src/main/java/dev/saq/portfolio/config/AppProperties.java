@@ -66,7 +66,8 @@ public record AppProperties(
 	 *
 	 * @param resendApiKey Resend API key
 	 * @param from         verified sender address
-	 * @param ownerEmail   where contact-form notifications are delivered
+	 * @param ownerEmail   where owner notifications are delivered: contact-form messages, and one
+	 *                     per new pending guestbook entry
 	 */
 	public record Mail(
 			@NotBlank String resendApiKey,
