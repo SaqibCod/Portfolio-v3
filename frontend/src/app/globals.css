@@ -72,6 +72,15 @@
   --err: #ef4444;
   --off: #71717a;
 
+  /* Contribution-heatmap levels, straight from `.hm i.l1`–`.l4` in the exports.
+     Four steps of the accent; level 0 is `--line`, so an empty day reads as the
+     same hairline grey as every other border. Identical in both themes, like
+     the rest of the accents. */
+  --heat-1: rgb(139 92 246 / 0.32);
+  --heat-2: rgb(139 92 246 / 0.55);
+  --heat-3: rgb(139 92 246 / 0.8);
+  --heat-4: #a855f7;
+
   --grad: linear-gradient(90deg, #7c3aed, #c026d3);
   --grad-shadow: 0 10px 30px -8px rgb(192 38 211 / 0.6);
   --ring: rgb(139 92 246 / 0.25);
@@ -162,6 +171,11 @@
   --color-deco-lime: var(--deco-lime);
   --color-deco-orange: var(--deco-orange);
   --color-deco-fuchsia: var(--deco-fuchsia);
+
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
 
   --font-sans: var(--font-archivo), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;

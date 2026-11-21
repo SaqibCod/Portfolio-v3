@@ -53,9 +53,9 @@ const RELATIVE_UNITS: readonly [Intl.RelativeTimeFormatUnit, number][] = [
 /**
  * Formats an ISO 8601 timestamp as "3 days ago", for the moderation queue.
  *
- * Safe here, and only here: `/admin` renders nothing until a fetch in the
- * browser has returned, so there is no server-rendered string for this to
- * disagree with. Everything server-rendered uses {@link formatTimestampDate}.
+ * Safe in the browser: `/admin` renders nothing until a fetch there has
+ * returned, so there is no server-rendered string for this to disagree with.
+ * See {@link formatCompactRelativeTime} for the server-rendered case.
  */
 export function formatRelativeTime(
   isoTimestamp: string,
@@ -72,4 +72,43 @@ export function formatRelativeTime(
     }
   }
   return relativeFormatter.format(Math.round(elapsedSeconds), "second");
+}
+
+/**
+ * Formats an ISO 8601 timestamp as "2h ago", for the GitHub widgets.
+ *
+ * Compact because the design's activity rows and card heads use that form
+ * ("2h ago", "3d ago"), where `Intl.RelativeTimeFormat` would give "2 hours
+ * ago" and wrap the column.
+ *
+ * Safe on the server for a different reason than
+ * {@link formatRelativeTime}: the GitHub widgets are server components with no
+ * client JavaScript, so this string is rendered once and never recomputed in
+ * the browser — there is nothing for it to hydrate against and disagree with.
+ * It would be a hydration mismatch inside a client component.
+ *
+ * Coarse on purpose. The page is statically regenerated at most every fifteen
+ * minutes, so a minute-accurate label would be wrong more often than it was
+ * right; "just now" covers everything under an hour.
+ */
+export function formatCompactRelativeTime(
+  isoTimestamp: string,
+  now: Date = new Date(),
+): string {
+  const elapsedSeconds = (now.getTime() - new Date(isoTimestamp).getTime()) / 1000;
+
+  // A timestamp in the future means clock skew between here and the API, not
+  // something that has not happened yet.
+  if (elapsedSeconds < 3600) return "just now";
+
+  const hours = Math.floor(elapsedSeconds / 3600);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+
+  return `${Math.floor(days / 365)}y ago`;
 }

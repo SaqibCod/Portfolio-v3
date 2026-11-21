@@ -39,3 +39,9 @@ app:
     resend-api-key: ${RESEND_API_KEY}
     from: ${MAIL_FROM}
     owner-email: ${OWNER_EMAIL}
+  github:
+    # Personal access token with public read only -- the GraphQL API refuses unauthenticated
+    # requests, and the contribution calendar exists nowhere else.
+    token: ${GITHUB_TOKEN}
+    # The account whose public activity the site publishes.
+    username: ${GITHUB_USERNAME}

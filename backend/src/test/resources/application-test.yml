@@ -15,3 +15,8 @@ app:
     resend-api-key: test-resend-api-key
     from: portfolio@example.com
     owner-email: owner@example.com
+  github:
+    # GithubClient is mocked in every test, and GithubRefreshScheduler is inactive under this
+    # profile, so nothing ever authenticates with this.
+    token: test-github-token
+    username: test-user
