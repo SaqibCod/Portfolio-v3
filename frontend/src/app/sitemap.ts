@@ -12,12 +12,15 @@ const pageUpdated = {
   projects: "2026-11-18",
   tech: "2026-11-18",
   contact: "2026-11-19",
+  guestbook: "2026-11-20",
 } as const;
 
 /**
- * Every route the site actually serves. Pages that later phases add —
- * /status, /guestbook — are deliberately absent: listing a URL that 404s is
- * worse than omitting it.
+ * Every route the site actually serves. Pages that later phases add — /status —
+ * are deliberately absent: listing a URL that 404s is worse than omitting it.
+ *
+ * `/admin` is absent for a different reason and must stay that way: it is the
+ * owner's moderation page, it is `noindex`, and robots.txt disallows it.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const projects = getAllProjects();
@@ -40,6 +43,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: pageUpdated.contact,
       changeFrequency: "monthly",
       priority: 0.7,
+    },
+    {
+      url: absoluteUrl("/guestbook"),
+      lastModified: pageUpdated.guestbook,
+      // The list changes whenever a note is approved, which is the most
+      // frequently changing page on the site.
+      changeFrequency: "weekly",
+      priority: 0.6,
     },
     {
       url: absoluteUrl("/tech"),

@@ -235,6 +235,10 @@ export function ContactForm({
         onToken={setToken}
         onClear={() => setToken(null)}
         invalid={banner?.title === "Couldn’t verify you’re human"}
+        action="contact"
+        // Both places this form is used — /contact and the home page's contact
+        // band — are inverted bands.
+        invertedGround
       />
 
       <Button

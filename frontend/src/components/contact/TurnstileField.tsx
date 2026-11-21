@@ -17,6 +17,17 @@ export type TurnstileFieldProps = {
   widgetRef: React.RefObject<TurnstileInstance | null>;
   /** Shown instead of the default caption when the check itself failed. */
   invalid?: boolean;
+  /**
+   * Which form this widget belongs to. Cloudflare reports solve and failure
+   * rates per action, so the two forms have to be distinguishable there.
+   */
+  action?: string;
+  /**
+   * Set when the field sits on a band whose ground is the opposite of the
+   * page's, which is where the home page's contact form lives. The widget's
+   * own theme is then flipped to match what is actually behind it.
+   */
+  invertedGround?: boolean;
 };
 
 type Status = "loading" | "waiting" | "solved" | "expired" | "error";
@@ -51,6 +62,8 @@ export function TurnstileField({
   onClear,
   widgetRef,
   invalid = false,
+  action = "contact",
+  invertedGround = false,
 }: TurnstileFieldProps) {
   const [status, setStatus] = useState<Status>("loading");
   const { resolvedTheme } = useTheme();
@@ -63,15 +76,17 @@ export function TurnstileField({
     () => false,
   );
 
-  // The form sits on an inverted band, so the widget's ground is the opposite
-  // of the page's and its theme has to be flipped to match.
-  const options = useMemo(
-    () => ({
-      theme: resolvedTheme === "dark" ? ("light" as const) : ("dark" as const),
-      action: "contact",
-    }),
-    [resolvedTheme],
-  );
+  // On an inverted band the widget's ground is the opposite of the page's, so
+  // its theme has to be flipped to match what is behind it; anywhere else it
+  // follows the page.
+  const options = useMemo(() => {
+    const pageIsDark = resolvedTheme === "dark";
+    const widgetIsDark = invertedGround ? !pageIsDark : pageIsDark;
+    return {
+      theme: widgetIsDark ? ("dark" as const) : ("light" as const),
+      action,
+    };
+  }, [resolvedTheme, invertedGround, action]);
 
   const shown: Status = invalid && status === "solved" ? "error" : status;
 

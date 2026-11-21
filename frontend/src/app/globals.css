@@ -81,6 +81,17 @@
   --deco-orange: #fb923c;
   --deco-fuchsia: #e879f9;
 
+  /* Avatar grounds for guestbook initials — the `AV` palette in the guestbook
+     and admin exports, in order. Each one carries white text, so all six are
+     dark enough for that to stay legible; they are picked per entry rather
+     than per position, so a note keeps its colour as more pages load. */
+  --av-1: #7c3aed;
+  --av-2: #c026d3;
+  --av-3: #0f766e;
+  --av-4: #b45309;
+  --av-5: #1d4ed8;
+  --av-6: #be123c;
+
   /* The floating objects that drift behind the hero and error bands. */
   --orb-sphere: radial-gradient(
     circle at 32% 28%,
@@ -88,6 +99,14 @@
     #c4b5fd 14%,
     #7c3aed 55%,
     #2e1065 100%
+  );
+  /* The guestbook head's sphere: the same form as --orb-sphere in fuchsia. */
+  --orb-sphere-fuchsia: radial-gradient(
+    circle at 32% 28%,
+    #ffffff 0%,
+    #f5d0fe 14%,
+    #c026d3 55%,
+    #4a044e 100%
   );
   --orb-capsule: linear-gradient(
     180deg,
