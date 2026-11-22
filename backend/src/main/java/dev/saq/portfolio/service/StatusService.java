@@ -21,6 +21,7 @@ import dev.saq.portfolio.model.StatusCheck;
 import dev.saq.portfolio.model.StatusWindow;
 import dev.saq.portfolio.repository.StatusCheckRepository;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +59,8 @@ public class StatusService {
 
 	private final Clock clock;
 
+	/** Marked explicitly: there are two constructors, so Spring cannot deduce which to use. */
+	@Autowired
 	public StatusService(StatusProperties statusProperties,
 			StatusCheckRepository statusCheckRepository, StatusMapper statusMapper) {
 

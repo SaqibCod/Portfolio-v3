@@ -12,6 +12,7 @@ import dev.saq.portfolio.repository.StatusCheckRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -56,6 +57,8 @@ public class HealthProbeService {
 
 	private final LongSupplier nanoTime;
 
+	/** Marked explicitly: there are two constructors, so Spring cannot deduce which to use. */
+	@Autowired
 	public HealthProbeService(RestClient statusProbeRestClient, StatusProperties statusProperties,
 			StatusCheckRepository statusCheckRepository) {
 
