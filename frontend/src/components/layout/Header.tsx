@@ -10,7 +10,7 @@ import { PresenceChip } from "@/components/presence/PresenceChip";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { siteConfig } from "@/lib/site-config";
+import { siteConfig, type NavItem } from "@/lib/site-config";
 
 const MOBILE_NAV_ID = "mobile-nav";
 
@@ -53,7 +53,16 @@ function CloseIcon() {
  * trigger that replaces the row below 760px. `--nav-bg` is a semi-transparent
  * ground behind a 14px blur, so the page shows through as it scrolls.
  */
-export function Header() {
+type HeaderProps = {
+  /**
+   * The primary nav. Built on the server by the root layout, because `/status`
+   * is only a route while a project is being monitored and a link to a page
+   * that 404s must never reach the HTML.
+   */
+  nav: readonly NavItem[];
+};
+
+export function Header({ nav }: HeaderProps) {
   const pathname = usePathname();
 
   // The menu is keyed to the route it opened on, so a navigation — including
@@ -77,7 +86,7 @@ export function Header() {
             <span className="text-ac1">.</span>
           </Link>
 
-          <NavLinks className="hidden md:flex" />
+          <NavLinks items={nav} className="hidden md:flex" />
 
           <div className="flex items-center gap-3">
             {/* `.presence` is hidden below the breakpoint in the exports.
@@ -99,7 +108,7 @@ export function Header() {
       </header>
 
       {menuOpen ? (
-        <MobileNav id={MOBILE_NAV_ID} onNavigate={closeMenu} />
+        <MobileNav id={MOBILE_NAV_ID} items={nav} onNavigate={closeMenu} />
       ) : null}
     </>
   );

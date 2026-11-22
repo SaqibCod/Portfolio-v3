@@ -226,7 +226,7 @@ export function ServiceRow({
                 value={
                   averageMs === null
                     ? "—"
-                    : `${averageMs.toLocaleString("en-US")} ms`
+                    : `${averageMs.toLocaleString("en-US")} ms`
                 }
               />
               {service.url ? (

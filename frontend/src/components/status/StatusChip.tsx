@@ -1,9 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import { BadgeLink, type BadgeTone } from "@/components/ui/Badge";
+import { fetchStatusOverview, type ServiceState } from "@/lib/status";
 
-import type { components } from "@/lib/api/schema";
-
-/** Typed from the contract so phase 07 can pass the response straight through. */
-export type ServiceState = components["schemas"]["ServiceState"];
+/** Re-exported for the components that were typed against this before phase 07. */
+export type { ServiceState };
 
 /**
  * Only "All systems operational" appears in the exports; the other three
@@ -18,20 +21,47 @@ const presentation: Record<ServiceState, { tone: BadgeTone; label: string; live:
 };
 
 type StatusChipProps = {
-  /**
-   * Overall health. Phase 07 supplies this from `GET /api/v1/status`; until
-   * then it is undefined and the chip renders nothing rather than claiming a
-   * health state nobody checked.
-   */
-  status?: ServiceState;
   className?: string;
 };
 
-/** The footer's status chip, linking through to the status page. */
-export function StatusChip({ status, className }: StatusChipProps) {
-  if (!status) return null;
+/**
+ * The footer's status chip, linking through to the status page.
+ *
+ * Fetched in the browser rather than on the server, which is a deliberate
+ * trade. The footer is on every page, so a server fetch here would put the
+ * whole site — case studies, the tech page, the project index — on a
+ * one-minute revalidation cycle for the sake of one chip. Fetching on mount
+ * keeps those pages static and keeps the chip honest; a stale "all systems
+ * operational" during an outage would be worse than no chip at all.
+ *
+ * Nothing is rendered until an answer arrives, and nothing is rendered if the
+ * answer is that no project is monitored or that the API is unreachable. So the
+ * chip appears and disappears with the status page itself, from the backend's
+ * configuration, with nothing to change here.
+ *
+ * This is safe to leave out of the HTML because it holds no information of its
+ * own: it is a summary of `/status`, which is a page in the sitemap and is
+ * linked from the footer's Site column in full.
+ */
+export function StatusChip({ className }: StatusChipProps) {
+  const [state, setState] = useState<ServiceState | null>(null);
 
-  const { tone, label, live } = presentation[status];
+  useEffect(() => {
+    let active = true;
+
+    fetchStatusOverview().then((overview) => {
+      if (!active || !overview || overview.services.length === 0) return;
+      setState(overview.overall);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!state) return null;
+
+  const { tone, label, live } = presentation[state];
 
   return (
     <BadgeLink href="/status" dot={tone} live={live} className={className}>

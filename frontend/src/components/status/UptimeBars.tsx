@@ -106,7 +106,7 @@ function barTitle(point: StatusPoint): string {
   const speed =
     point.avgResponseTimeMs === null || point.avgResponseTimeMs === undefined
       ? ""
-      : ` · ${point.avgResponseTimeMs} ms`;
+      : ` · ${point.avgResponseTimeMs} ms`;
 
   return `${when} · ${state}${speed}`;
 }
