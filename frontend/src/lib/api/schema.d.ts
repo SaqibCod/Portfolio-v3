@@ -482,6 +482,7 @@ export interface operations {
                     "application/json": components["schemas"]["GithubSummary"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
@@ -506,6 +507,8 @@ export interface operations {
                     "application/json": components["schemas"]["GithubActivity"];
                 };
             };
+            400: components["responses"]["BadRequest"];
+            429: components["responses"]["TooManyRequests"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

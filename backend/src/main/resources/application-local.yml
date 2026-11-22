@@ -30,3 +30,9 @@ app:
     resend-api-key: ${RESEND_API_KEY:local-development-resend-key}
     from: ${MAIL_FROM:portfolio@example.com}
     owner-email: ${OWNER_EMAIL:owner@example.com}
+  github:
+    # There is no usable placeholder here: GitHub's GraphQL API rejects any token that is not
+    # real, so /api/v1/github/* answers 503 until GITHUB_TOKEN is a token this account owns.
+    # Create one at https://github.com/settings/personal-access-tokens with public read access.
+    token: ${GITHUB_TOKEN:local-development-github-token}
+    username: ${GITHUB_USERNAME:SaqibCod}

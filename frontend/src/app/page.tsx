@@ -1,3 +1,6 @@
+import { ContributionGraph } from "@/components/github/ContributionGraph";
+import { CurrentlyBuilding } from "@/components/github/CurrentlyBuilding";
+import { TopLanguages } from "@/components/github/TopLanguages";
 import { About } from "@/components/home/About";
 import { ContactBand } from "@/components/home/ContactBand";
 import { Education } from "@/components/home/Education";
@@ -7,9 +10,11 @@ import { TechStrip } from "@/components/home/TechStrip";
 import { ProjectGrid } from "@/components/projects/ProjectGrid";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ButtonLink } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { PendingSlot } from "@/components/ui/PendingSlot";
 import { Section } from "@/components/ui/Section";
+import { fetchGithubActivity, fetchGithubSummary } from "@/lib/github";
 import { personJsonLd } from "@/lib/jsonld";
 import { getFeaturedProjects } from "@/lib/projects";
 import { buildMetadata } from "@/lib/seo";
@@ -26,8 +31,23 @@ export const metadata: Metadata = buildMetadata({
   absoluteTitle: true,
 });
 
-export default function Home() {
+/** The GitHub profile the widgets link to, from the configured social links. */
+const githubProfileUrl =
+  siteConfig.social.find((link) => link.label === "GitHub")?.href ??
+  "https://github.com";
+
+/** Shown in the card head before the API has ever answered. */
+const githubUsername = githubProfileUrl.replace(/^.*github\.com\//, "");
+
+export default async function Home() {
   const featured = getFeaturedProjects();
+
+  // Both at once: they are independent endpoints, and awaiting them in sequence
+  // would make the page wait for the sum of the two.
+  const [summary, activity] = await Promise.all([
+    fetchGithubSummary(),
+    fetchGithubActivity(),
+  ]);
 
   return (
     <>
@@ -62,22 +82,66 @@ export default function Home() {
       </Section>
 
       {/* 04 — Currently building */}
-      <Section id="building" spacing="none" className="py-10 md:py-20">
+      <Section id="building" spacing="none" className="pt-5 pb-25 md:pt-10 md:pb-35">
         <Container>
           <p className="eyebrow">04 — Live from GitHub</p>
           <h2 className="display metal mt-4.5 text-[10vw] md:text-[clamp(44px,7vw,112px)]">
             Currently building
           </h2>
           <div className="mt-8 grid gap-6 md:mt-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
-            <PendingSlot label="Recent activity">
-              The latest commits, pull requests and releases from my public
-              repositories, read from the GitHub API and cached server-side.
-              Arrives with the GitHub phase.
-            </PendingSlot>
-            <PendingSlot label="GitHub stats">
-              Contribution graph and top languages for the last year, refreshed
-              every few hours. Arrives with the GitHub phase.
-            </PendingSlot>
+            <Card>
+              <h3 className="mb-5 text-xl font-extrabold uppercase [font-stretch:115%]">
+                Recent activity
+              </h3>
+              {activity && activity.items.length > 0 ? (
+                <CurrentlyBuilding
+                  items={activity.items}
+                  updatedAt={activity.updatedAt}
+                />
+              ) : (
+                <p className="text-[15px] leading-relaxed text-mute">
+                  Activity unavailable right now — see{" "}
+                  <a
+                    href={githubProfileUrl}
+                    rel="me noreferrer"
+                    target="_blank"
+                  >
+                    my GitHub profile
+                  </a>{" "}
+                  instead.
+                </p>
+              )}
+            </Card>
+
+            <Card>
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <h3 className="text-xl font-extrabold uppercase [font-stretch:115%]">
+                  GitHub
+                </h3>
+                <a
+                  href={githubProfileUrl}
+                  rel="me noreferrer"
+                  target="_blank"
+                  className="font-mono text-chip text-mute no-underline hover:text-fg"
+                >
+                  @{summary?.username ?? githubUsername}
+                </a>
+              </div>
+              {summary ? (
+                <>
+                  <ContributionGraph
+                    contributions={summary.contributions}
+                    totalContributions={summary.totalContributions}
+                  />
+                  <TopLanguages languages={summary.topLanguages} />
+                </>
+              ) : (
+                <p className="text-[15px] leading-relaxed text-mute">
+                  Stats unavailable right now — the contribution graph and
+                  language breakdown are read live from GitHub.
+                </p>
+              )}
+            </Card>
           </div>
         </Container>
       </Section>

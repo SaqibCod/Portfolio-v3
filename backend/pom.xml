@@ -65,6 +65,13 @@
 			<artifactId>caffeine</artifactId>
 		</dependency>
 
+		<!-- Caching: the GitHub summary and activity responses (phase 06). Boot 4 keeps the
+		     starter's name but backs it with the dedicated spring-boot-cache module. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
 		<!-- Test (Boot 4.1 ships focused per-starter test modules; each pulls spring-boot-starter-test) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
