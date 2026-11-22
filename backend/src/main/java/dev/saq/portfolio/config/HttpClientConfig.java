@@ -34,6 +34,23 @@ public class HttpClientConfig {
 		return builder(CONNECT_TIMEOUT, READ_TIMEOUT);
 	}
 
+	/**
+	 * The client health probes are made with, on {@code app.status.timeout} rather than the
+	 * shared read timeout.
+	 *
+	 * <p>A probe's timeout is not an infrastructure detail but part of what the status page
+	 * means: it is the line between "slow" and "down", and the owner sets it per deployment. The
+	 * shared ten seconds would quietly override that for anything configured to be stricter.
+	 *
+	 * <p>Redirects are not followed, inherited from {@link #builder}. A health endpoint that
+	 * answers {@code 302} has not reported itself healthy, and treating the redirect target's
+	 * answer as the service's own would measure whatever happens to sit behind it.
+	 */
+	@Bean
+	public RestClient statusProbeRestClient(StatusProperties statusProperties) {
+		return builder(CONNECT_TIMEOUT, statusProperties.timeout()).build();
+	}
+
 	/** Package-private so tests can exercise the same wiring with shorter timeouts. */
 	static RestClient.Builder builder(Duration connectTimeout, Duration readTimeout) {
 		HttpClient httpClient = HttpClient.newBuilder()

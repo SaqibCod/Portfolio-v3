@@ -2,6 +2,7 @@ package dev.saq.portfolio.config;
 
 import dev.saq.portfolio.interceptor.RateLimitInterceptor;
 import dev.saq.portfolio.model.GuestbookStatus;
+import dev.saq.portfolio.model.StatusWindow;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
@@ -32,10 +33,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
 	 * {@link GuestbookStatus#fromApi} instead keeps the lowercase mapping in the enum — the one
 	 * place that owns it — and turns an unknown value into a type-mismatch, which the framework
 	 * reports as a 400 rather than letting it surface as an unhandled 500.
+	 *
+	 * <p>{@link StatusWindow} is registered for the same reason: {@code 24h} is not a legal Java
+	 * constant name, so there is no spelling of the enum that {@code Enum.valueOf} could match.
 	 */
 	@Override
 	public void addFormatters(FormatterRegistry registry) {
 		registry.addConverter(String.class, GuestbookStatus.class, GuestbookStatus::fromApi);
+		registry.addConverter(String.class, StatusWindow.class, StatusWindow::fromApi);
 	}
 
 }

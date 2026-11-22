@@ -36,3 +36,17 @@ app:
     # Create one at https://github.com/settings/personal-access-tokens with public read access.
     token: ${GITHUB_TOKEN:local-development-github-token}
     username: ${GITHUB_USERNAME:SaqibCod}
+  status:
+    # One service so the status page has something to draw locally: the Next.js dev server on
+    # :3000. Its root answers 200 with HTML, which is all a probe needs -- there is no actuator
+    # on the frontend, so health-path is "/" rather than the default.
+    #
+    # Deliberately absent from application.yml: localhost is not something a deployed API should
+    # ever report on. Start `pnpm dev` to watch the page go operational, stop it to watch it
+    # go down within one interval.
+    interval: 30s
+    services:
+      - slug: frontend-dev
+        name: Frontend (dev)
+        url: http://localhost:3000
+        health-path: /

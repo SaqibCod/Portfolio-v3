@@ -45,3 +45,31 @@ app:
     token: ${GITHUB_TOKEN}
     # The account whose public activity the site publishes.
     username: ${GITHUB_USERNAME}
+  status:
+    # How often every monitored service is probed, and what a probe is allowed to cost.
+    interval: 5m
+    timeout: 10s
+    # A successful probe at or beyond this round trip is reported as degraded, not operational.
+    degraded-threshold: 2s
+    # Probe results older than this are deleted nightly. Comfortably past the 30-day history
+    # window, so the oldest bucket is never half-swept while it is still being served.
+    retention: 35d
+    # Nothing is monitored until a project is deployed. An empty list is a working configuration,
+    # not a hole: the probe job visits nobody, /api/v1/status answers with an empty list, and the
+    # site leaves its status page out of the navigation, out of the sitemap, and off the routes
+    # it serves. Bringing a project online is this list plus a restart -- no code changes.
+    #
+    # services:
+    #   - slug: githmind
+    #     name: githMind
+    #     url: https://githmind.example.com
+    #     health-path: /actuator/health
+    #   - slug: medi-scan
+    #     name: Medi-Scan
+    #     url: https://medi-scan.example.com
+    #     health-path: /actuator/health
+    #   - slug: portfolio-api
+    #     name: Portfolio API
+    #     url: https://api.example.com
+    #     health-path: /actuator/health
+    services: []
