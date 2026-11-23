@@ -2,6 +2,9 @@ import Link from "next/link";
 
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import { cn } from "@/lib/cn";
+import { STATUS_PATH } from "@/lib/navigation";
+import { statusPageIsPublished } from "@/lib/status";
 
 /**
  * `not-found.tsx` renders inside the root layout, so it inherits the shell and
@@ -10,7 +13,13 @@ import { Container } from "@/components/ui/Container";
  * is still experimental, so it is deliberately not set here.
  */
 
-/** The "Popular pages" grid from the error export. */
+/**
+ * The "Popular pages" grid from the error export.
+ *
+ * `/status` is in the list only while a project is monitored — see
+ * `lib/navigation.ts`. A 404 page that offers a link to another 404 is a
+ * particularly poor way to help someone who is already lost.
+ */
 const popularPages = [
   { href: "/", title: "Home", description: "Start from the top." },
   {
@@ -20,7 +29,7 @@ const popularPages = [
   },
   { href: "/guestbook", title: "Guestbook", description: "Leave a note." },
   { href: "/status", title: "Status", description: "Is everything up?" },
-];
+] as const;
 
 function ArrowIcon() {
   return (
@@ -56,7 +65,12 @@ function Orbs() {
   );
 }
 
-export default function NotFound() {
+export default async function NotFound() {
+  const statusPublished = await statusPageIsPublished();
+  const pages = popularPages.filter(
+    (page) => page.href !== STATUS_PATH || statusPublished,
+  );
+
   return (
     <div className="relative pt-12 pb-40 text-center md:pt-18 md:pb-55">
       <Orbs />
@@ -82,11 +96,16 @@ export default function NotFound() {
           </ButtonLink>
         </div>
 
+        {/* The column count follows the card count, so dropping Status leaves
+            three even columns rather than a hole in a four-column row. */}
         <nav
           aria-label="Popular pages"
-          className="mx-auto mt-11 grid max-w-[960px] grid-cols-2 gap-3 text-left md:mt-16 md:grid-cols-4"
+          className={cn(
+            "mx-auto mt-11 grid max-w-[960px] grid-cols-2 gap-3 text-left md:mt-16",
+            pages.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3",
+          )}
         >
-          {popularPages.map((page) => (
+          {pages.map((page) => (
             <Link
               key={page.href}
               href={page.href}

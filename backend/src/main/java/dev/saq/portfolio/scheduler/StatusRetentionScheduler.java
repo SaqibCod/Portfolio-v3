@@ -8,6 +8,7 @@ import dev.saq.portfolio.repository.StatusCheckRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -45,6 +46,8 @@ public class StatusRetentionScheduler {
 
 	private final Clock clock;
 
+	/** Marked explicitly: there are two constructors, so Spring cannot deduce which to use. */
+	@Autowired
 	public StatusRetentionScheduler(StatusProperties statusProperties,
 			StatusCheckRepository statusCheckRepository) {
 
