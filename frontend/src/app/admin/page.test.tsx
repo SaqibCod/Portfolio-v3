@@ -20,8 +20,8 @@ describe("Admin page", () => {
     expect(metadata.robots).toEqual({ index: false, follow: false });
   });
 
-  it("is absent from the sitemap", () => {
-    const urls = sitemap().map((entry) => entry.url);
+  it("is absent from the sitemap", async () => {
+    const urls = (await sitemap()).map((entry) => entry.url);
 
     expect(urls).not.toContain(`${siteConfig.siteUrl}/admin`);
   });

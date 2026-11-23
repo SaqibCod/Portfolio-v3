@@ -20,3 +20,8 @@ app:
     # profile, so nothing ever authenticates with this.
     token: test-github-token
     username: test-user
+  status:
+    # Empty on purpose. The scheduler is inactive under this profile anyway, and the integration
+    # test for the unconfigured case asserts on exactly this: an empty list is a working
+    # configuration, not a startup failure.
+    services: []

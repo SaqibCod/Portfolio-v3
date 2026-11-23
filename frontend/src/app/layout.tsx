@@ -4,7 +4,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { footerSiteNav, primaryNav } from "@/lib/navigation";
 import { siteConfig } from "@/lib/site-config";
+import { statusPageIsPublished } from "@/lib/status";
 
 import "./globals.css";
 
@@ -51,7 +53,21 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+/**
+ * Asks the API whether there is a status page to link to, once per hour.
+ *
+ * This is the one thing the layout fetches, and it costs something worth
+ * naming: a fetch here gives every route a revalidation window, so pages that
+ * would otherwise be fully static are rebuilt at most hourly. That is the price
+ * of the rule that deploying a project needs no change to this app — the link
+ * has to follow the backend's `app.status.services`, and only the backend knows
+ * what is in it. An hour is chosen to make the price as small as possible:
+ * "does the owner monitor anything" changes when a project ships, not when its
+ * health does.
+ */
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const statusPublished = await statusPageIsPublished();
+
   return (
     <html
       lang="en"
@@ -61,14 +77,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col overflow-x-clip">
         <ThemeProvider>
           <SkipLink />
-          <Header />
+          <Header nav={primaryNav(statusPublished)} />
           {/* tabIndex -1 makes the skip link move focus onto <main> itself
               rather than only setting the next tab stop, which is what
               Safari and several screen readers need. */}
           <main id="main" tabIndex={-1} className="flex flex-1 flex-col focus-visible:outline-none">
             {children}
           </main>
-          <Footer />
+          <Footer siteLinks={footerSiteNav(statusPublished)} />
         </ThemeProvider>
       </body>
     </html>

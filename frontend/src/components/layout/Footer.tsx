@@ -4,7 +4,7 @@ import { FooterShapes } from "@/components/layout/FooterShapes";
 import { PresenceChip } from "@/components/presence/PresenceChip";
 import { StatusChip } from "@/components/status/StatusChip";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { siteConfig } from "@/lib/site-config";
+import { siteConfig, type NavItem } from "@/lib/site-config";
 
 type FooterColumnProps = {
   title: string;
@@ -41,7 +41,16 @@ const linkClasses = "text-[15px] font-semibold no-underline";
  * the last band, carrying the stroked wordmark, three link columns, the
  * copyright line and the decorative shape row.
  */
-export function Footer() {
+type FooterProps = {
+  /**
+   * The "Site" column. Passed in rather than read from `siteConfig` because
+   * `/status` is only a route while a project is being monitored — see
+   * `lib/navigation.ts`.
+   */
+  siteLinks: readonly NavItem[];
+};
+
+export function Footer({ siteLinks }: FooterProps) {
   const year = new Date().getFullYear();
 
   return (
@@ -71,7 +80,7 @@ export function Footer() {
           </FooterColumn>
 
           <FooterColumn title="Site">
-            {siteConfig.footerSite.map((item) => (
+            {siteLinks.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} className={linkClasses}>
                   {item.label}
@@ -95,8 +104,8 @@ export function Footer() {
         </nav>
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
-          {/* Status and presence render nothing until phases 07 and 09 wire
-              their data; the theme chip is always there. */}
+          {/* The status chip fetches its own state and renders nothing when no
+              project is monitored; presence waits for phase 09. */}
           <div className="flex flex-wrap gap-3">
             <StatusChip />
             <PresenceChip wording="long" live={false} />

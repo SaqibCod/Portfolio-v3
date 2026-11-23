@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 
-import { siteConfig } from "@/lib/site-config";
+import type { NavItem } from "@/lib/site-config";
 
 type MobileNavProps = {
   id: string;
+  /** The same list the desktop row shows, so the two never disagree. */
+  items: readonly NavItem[];
   onNavigate: () => void;
 };
 
@@ -14,14 +16,14 @@ type MobileNavProps = {
  * display-weight links, each separated by a hairline — `.mmenu` in the
  * exports.
  */
-export function MobileNav({ id, onNavigate }: MobileNavProps) {
+export function MobileNav({ id, items, onNavigate }: MobileNavProps) {
   return (
     <nav
       id={id}
       aria-label="Mobile"
       className="sticky top-nav-sm z-19 flex flex-col border-b border-line bg-bg px-5 pt-2 pb-6 md:hidden"
     >
-      {siteConfig.nav.map((item) => (
+      {items.map((item) => (
         <Link
           key={item.href}
           href={item.href}

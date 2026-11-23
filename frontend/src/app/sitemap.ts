@@ -1,5 +1,6 @@
 import { getAllProjects } from "@/lib/projects";
 import { absoluteUrl } from "@/lib/seo";
+import { statusPageIsPublished } from "@/lib/status";
 
 import type { MetadataRoute } from "next";
 
@@ -13,17 +14,23 @@ const pageUpdated = {
   tech: "2026-11-18",
   contact: "2026-11-19",
   guestbook: "2026-11-20",
+  status: "2026-11-22",
 } as const;
 
 /**
- * Every route the site actually serves. Pages that later phases add — /status —
- * are deliberately absent: listing a URL that 404s is worse than omitting it.
+ * Every route the site actually serves.
+ *
+ * `/status` is here only while the API reports a monitored project, because
+ * that is the only time the route exists — it 404s otherwise, and listing a URL
+ * that 404s is worse than omitting it. Deploying a project and adding it to the
+ * backend's `app.status.services` puts it back without a change here.
  *
  * `/admin` is absent for a different reason and must stay that way: it is the
  * owner's moderation page, it is `noindex`, and robots.txt disallows it.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const projects = getAllProjects();
+  const statusPublished = await statusPageIsPublished();
 
   return [
     {
@@ -58,6 +65,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    ...(statusPublished
+      ? [
+          {
+            url: absoluteUrl("/status"),
+            lastModified: pageUpdated.status,
+            // The figures move every few minutes, but the page itself — which
+            // projects are listed and what it says about them — does not.
+            changeFrequency: "daily" as const,
+            priority: 0.5,
+          },
+        ]
+      : []),
     ...projects.map((project) => ({
       url: absoluteUrl(project.href),
       // Straight from the case study's own front matter, so publishing an

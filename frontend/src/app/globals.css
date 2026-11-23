@@ -117,6 +117,43 @@
     #c026d3 55%,
     #4a044e 100%
   );
+  /* The status head's sphere, which carries the overall state. Same form as
+     --orb-sphere in each state's hue, from `.o1`, `.o1.warn|.down|.off` in the
+     status export. The shadow is part of the token: an `off` sphere has none,
+     because nothing is lit when nothing is known. */
+  --orb-ok: radial-gradient(
+    circle at 32% 28%,
+    #ffffff 0%,
+    #bbf7d0 14%,
+    #16a34a 55%,
+    #052e16 100%
+  );
+  --orb-ok-shadow: 0 30px 60px -20px rgb(22 163 74 / 0.6);
+  --orb-warn: radial-gradient(
+    circle at 32% 28%,
+    #ffffff 0%,
+    #fde68a 14%,
+    #d97706 55%,
+    #451a03 100%
+  );
+  --orb-warn-shadow: 0 30px 60px -20px rgb(217 119 6 / 0.6);
+  --orb-down: radial-gradient(
+    circle at 32% 28%,
+    #ffffff 0%,
+    #fecaca 14%,
+    #dc2626 55%,
+    #450a0a 100%
+  );
+  --orb-down-shadow: 0 30px 60px -20px rgb(220 38 38 / 0.6);
+  --orb-off: radial-gradient(
+    circle at 32% 28%,
+    #ffffff 0%,
+    #e4e4e7 14%,
+    #71717a 55%,
+    #18181b 100%
+  );
+  --orb-off-shadow: none;
+
   --orb-capsule: linear-gradient(
     180deg,
     #fed7aa 0%,

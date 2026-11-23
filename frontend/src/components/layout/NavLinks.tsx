@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/cn";
-import { siteConfig } from "@/lib/site-config";
+import type { NavItem } from "@/lib/site-config";
 
 /**
  * True when `href` points at the page we're on.
@@ -20,6 +20,8 @@ function isCurrent(href: string, pathname: string): boolean {
 }
 
 type NavLinksProps = {
+  /** The links to show. `/status` is absent unless a project is monitored. */
+  items: readonly NavItem[];
   className?: string;
   /** Called after a link is activated, so the mobile menu can close itself. */
   onNavigate?: () => void;
@@ -30,12 +32,12 @@ type NavLinksProps = {
  * on hover. The current page is underlined in the violet accent, as in
  * `.links a.cur`.
  */
-export function NavLinks({ className, onNavigate }: NavLinksProps) {
+export function NavLinks({ items, className, onNavigate }: NavLinksProps) {
   const pathname = usePathname();
 
   return (
     <ul className={cn("flex items-center gap-8", className)}>
-      {siteConfig.nav.map((item) => {
+      {items.map((item) => {
         const current = isCurrent(item.href, pathname);
         return (
           <li key={item.href}>
