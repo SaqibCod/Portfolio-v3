@@ -32,4 +32,23 @@ public class StubAiConfig {
 		return new StubEmbeddingModel();
 	}
 
+	/**
+	 * Stands in for Gemini's chat model, which {@code AiModelConfig} wraps as the primary client.
+	 *
+	 * <p>The bean name is {@code GoogleGenAiChatAutoConfiguration}'s, because that is the name
+	 * {@code AiModelConfig} qualifies on. Keeping the names rather than inventing test-only ones
+	 * means the production wiring — which of two {@code ChatModel} beans is primary — is the
+	 * wiring under test, instead of something tests bypass.
+	 */
+	@Bean
+	SwitchableChatModel googleGenAiChatModel() {
+		return new SwitchableChatModel();
+	}
+
+	/** Stands in for the OpenAI-compatible endpoint behind the fallback client. */
+	@Bean
+	SwitchableChatModel openAiChatModel() {
+		return new SwitchableChatModel();
+	}
+
 }

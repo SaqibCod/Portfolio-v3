@@ -40,6 +40,12 @@ import jakarta.validation.constraints.NotNull;
  *                             {@code ChatRequest.messages} maxItems in the contract
  * @param ingestOnStartup      whether {@code ApplicationReadyEvent} triggers ingestion. False in
  *                             tests, which drive ingestion by hand
+ * @param ownerName            how the assistant refers to the site owner. Rendered into the
+ *                             system prompt, so it is also what the model is told it answers
+ *                             about -- the short name the site uses, not a formal full name
+ * @param contactUrl           where the assistant sends a visitor whose question the site does
+ *                             not cover. The single most important link it can offer, because it
+ *                             is the honest answer to everything the knowledge base is missing
  */
 @Validated
 @ConfigurationProperties(prefix = "app.chat")
@@ -51,6 +57,8 @@ public record ChatProperties(
 		@NotBlank @DefaultValue("classpath:prompts/system.st") String systemPromptResource,
 		@NotBlank @DefaultValue("classpath:knowledge/*.md") String knowledgeLocation,
 		@Min(1) @Max(10) @DefaultValue("10") int maxMessages,
-		@DefaultValue("true") boolean ingestOnStartup) {
+		@DefaultValue("true") boolean ingestOnStartup,
+		@NotBlank @DefaultValue("Saq") String ownerName,
+		@NotBlank @DefaultValue("/#contact") String contactUrl) {
 
 }

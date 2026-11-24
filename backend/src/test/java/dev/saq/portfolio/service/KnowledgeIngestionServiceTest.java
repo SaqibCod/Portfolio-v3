@@ -70,7 +70,7 @@ class KnowledgeIngestionServiceTest {
 
 	private KnowledgeIngestionService newService(boolean ingestOnStartup) {
 		ChatProperties properties = new ChatProperties(5, 0.6, 8000, Duration.ofSeconds(15),
-				"classpath:prompts/system.st", KNOWLEDGE_PATTERN, 10, ingestOnStartup);
+				"classpath:prompts/system.st", KNOWLEDGE_PATTERN, 10, ingestOnStartup, "Saq", "/#contact");
 
 		// A TransactionTemplate with no transaction manager behind it: the callback runs inline,
 		// which is all these tests need. What the template guarantees in production (chunks and
