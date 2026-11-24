@@ -41,18 +41,53 @@ spring:
         # Shared by the chat and the embedding model.
         api-key: ${GEMINI_API_KEY}
         chat:
-          model: ${GEMINI_CHAT_MODEL:gemini-2.0-flash}
+          # Verified by actually calling it (24 Nov 2026), not from memory and not from
+          # Spring AI's default. Two traps here, both of which cost a debugging session:
+          #
+          #  - ListModels is not a list of models a key may use. gemini-2.5-flash is
+          #    listed and answers 404 "no longer available to new users"; so does
+          #    gemini-2.0-flash, which is Spring AI's own default.
+          #  - gemini-flash-latest looks like the safe choice and is the opposite. It was
+          #    resolving to an overloaded model on the day this was set, so the alias
+          #    would have taken the feature down with it. A pinned version makes a model
+          #    change a visible commit instead of a surprise outage.
+          #
+          # To re-check, send a real generateContent request rather than reading the list:
+          #   curl -X POST -H "x-goog-api-key: $GEMINI_API_KEY" \
+          #     -H 'Content-Type: application/json' \
+          #     -d '{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}' \
+          #     https://generativelanguage.googleapis.com/v1beta/models/<model>:generateContent
+          model: ${GEMINI_CHAT_MODEL:gemini-3.5-flash}
           # Low but not zero: the answer has to stay close to the retrieved context.
           temperature: 0.2
-          # ~150 words of answer plus a little headroom, matching the system prompt's limit.
+          # Thinking off. On a 3.x flash model the thinking tokens are drawn from the same
+          # budget as the answer, so with this unset every reply was cut off mid-sentence
+          # at about eleven words and took ~14s to say them. The knowledge base documents
+          # the same trap being hit in Medi-Scan, which is where the fix came from.
+          # There is nothing to reason about here anyway: the answer is a short summary of
+          # context that has already been retrieved and handed over.
+          thinking-budget: 0
+          # ~150 words of answer plus headroom, matching the system prompt's limit. Only
+          # meaningful now that thinking is not eating into it.
           max-output-tokens: 400
         embedding:
+          # Set again, not inherited. The reference docs say the chat and embedding
+          # connections are shared, and in 2.0.3 they are not:
+          # GoogleGenAiEmbeddingConnectionProperties binds its own api-key under
+          # spring.ai.google.genai.embedding, and finding none it falls through to
+          # Vertex AI mode and fails startup with "project-id must be set".
+          api-key: ${GEMINI_API_KEY}
           text:
-            model: ${GEMINI_EMBEDDING_MODEL:text-embedding-004}
-            # Pinned, not inherited: V5__knowledge.sql declares embedding vector(768), and
-            # pgvector refuses an HNSW index past 2,000 dimensions -- so a model change that
-            # altered the width would have to come with a migration. 768 is also this
-            # model's own default, so this is a guard rather than a reduction.
+            # Also verified against ListModels: text-embedding-004 is a Vertex AI model
+            # name that the Developer API does not serve, and asking for it fails with
+            # "not found for API version v1beta, or is not supported for embedContent".
+            # Only gemini-embedding-001 and the gemini-embedding-2 family are available.
+            model: ${GEMINI_EMBEDDING_MODEL:gemini-embedding-001}
+            # Load-bearing, not a formality. gemini-embedding-001 emits 3,072 dimensions
+            # by default and pgvector refuses an HNSW index above 2,000, so without this
+            # pin the index in V5__knowledge.sql could not be built at all. 768 is one of
+            # the widths this model supports natively and is what `vector(768)` declares;
+            # changing it means a new migration and a full re-ingestion.
             dimensions: 768
             # Left at the default RETRIEVAL_DOCUMENT. One EmbeddingModel bean serves both
             # ingestion and queries, so RETRIEVAL_QUERY cannot be set for questions alone

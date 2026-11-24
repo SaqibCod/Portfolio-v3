@@ -168,8 +168,23 @@ public class ChatService {
 			return new Attempt(tier, tokens, connection);
 		}
 		catch (RuntimeException ex) {
-			log.warn("The {} model produced no first token within {}: {}", tier,
-					properties.firstTokenTimeout(), ex.getMessage());
+			// Reported as a timeout only when it was one. Reactor raises IllegalStateException
+			// for an expired `block(Duration)` and passes anything else through, so lumping
+			// them together would log "no first token within 15s" for a 404 that came back in
+			// 200ms -- which sends whoever reads it looking for a slow network.
+			if (ex instanceof IllegalStateException) {
+				log.warn("The {} model produced no first token within {}", tier,
+						properties.firstTokenTimeout());
+			}
+			else {
+				// The root cause, not ex.toString(). Spring AI wraps provider failures in a
+				// RuntimeException whose message is the unhelpful "Failed to generate content",
+				// so the only thing that identifies a 404 from a 429 from a safety block is
+				// further down the chain. The full stack goes to debug rather than warn: these
+				// failures are expected and handled, and one stack per request is noise.
+				log.warn("The {} model failed before its first token: {}", tier, rootCauseOf(ex));
+				log.debug("The {} model's failure in full", tier, ex);
+			}
 			// Disposed rather than abandoned: an unread connection would keep consuming the
 			// provider's quota for an answer nobody will ever see.
 			connection.dispose();
@@ -212,6 +227,18 @@ public class ChatService {
 		problem.setTitle("Service unavailable");
 		problem.setDetail("The answer was cut short because the assistant stopped responding.");
 		return problem;
+	}
+
+	/**
+	 * The deepest cause's type and message, which is where a provider actually says what went
+	 * wrong. Bounded by identity rather than by depth, so a self-referencing cause cannot loop.
+	 */
+	private static String rootCauseOf(Throwable throwable) {
+		Throwable cause = throwable;
+		while (cause.getCause() != null && cause.getCause() != cause) {
+			cause = cause.getCause();
+		}
+		return cause.getClass().getSimpleName() + ": " + cause.getMessage();
 	}
 
 	private static ServerSentEvent<Object> event(String name, Object data) {
