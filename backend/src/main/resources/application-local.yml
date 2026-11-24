@@ -50,3 +50,20 @@ app:
         name: Frontend (dev)
         url: http://localhost:3000
         health-path: /
+
+spring:
+  ai:
+    google:
+      genai:
+        # No usable placeholder: Gemini rejects a key that is not real, so /api/v1/chat
+        # answers 503 until GEMINI_API_KEY is a key this account owns. Create one at
+        # https://aistudio.google.com/apikey -- the free tier is enough for this site.
+        # The app still starts without it; only the chat endpoint is affected.
+        api-key: ${GEMINI_API_KEY:local-development-gemini-key}
+    openai:
+      # Groq's OpenAI-compatible endpoint by default. Same deal: a fake key means the
+      # fallback fails too, which is exactly the "both providers down" 503 path.
+      base-url: ${FALLBACK_LLM_BASE_URL:https://api.groq.com/openai/v1}
+      api-key: ${FALLBACK_LLM_API_KEY:local-development-fallback-key}
+      chat:
+        model: ${FALLBACK_LLM_MODEL:llama-3.3-70b-versatile}

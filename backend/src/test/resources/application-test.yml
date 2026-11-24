@@ -25,3 +25,46 @@ app:
     # test for the unconfigured case asserts on exactly this: an empty list is a working
     # configuration, not a startup failure.
     services: []
+  chat:
+    # Same shape as production, with timings a test can wait out. The threshold is 0 because
+    # the stub EmbeddingModel's vectors are arbitrary: what the retrieval tests assert is the
+    # plumbing (topK, dedup by url, the empty case), not Gemini's similarity scores.
+    top-k: 5
+    similarity-threshold: 0.0
+    max-context-chars: 8000
+    # Short enough that the "primary never answers" test does not stall the suite.
+    first-token-timeout: 200ms
+    system-prompt-resource: classpath:prompts/system.st
+    knowledge-location: classpath:knowledge-test/*.md
+    max-messages: 10
+    # Nothing is embedded at startup. KnowledgeIngestionServiceTest drives ingestion by hand,
+    # so each test controls exactly which fixtures exist when it runs.
+    ingest-on-startup: false
+
+spring:
+  ai:
+    # No provider auto-configuration at all. This is what makes "tests never call a real LLM"
+    # a structural fact rather than a convention: with every selector set to `none` there is
+    # no Gemini client and no OpenAI client in the context to call. StubAiConfig supplies
+    # beans under the same names the auto-configurations would have used.
+    model:
+      chat: none
+      embedding: none
+      embedding.text: none
+      image: none
+      moderation: none
+      audio:
+        speech: none
+        transcription: none
+    chat:
+      client:
+        enabled: false
+    vectorstore:
+      pgvector:
+        # Identical to production: the integration tests run the real PgVectorStore against
+        # the pgvector container, over the schema V5__knowledge.sql creates.
+        initialize-schema: false
+        dimensions: 768
+        index-type: hnsw
+        distance-type: cosine_distance
+        table-name: vector_store

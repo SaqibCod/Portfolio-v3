@@ -11,6 +11,73 @@ spring:
   flyway:
     enabled: true
 
+  # AI (phase 08). Gemini answers and embeds; the OpenAI starter is pointed at an
+  # OpenAI-compatible endpoint and only ever used as the fallback.
+  ai:
+    chat:
+      client:
+        # Two ChatModel beans make Spring AI's single auto-configured ChatClient.Builder
+        # ambiguous, and there is no useful "default" client here anyway -- AiModelConfig
+        # builds one client per provider, each with its own qualifier.
+        enabled: false
+    model:
+      # spring.ai.model.chat is deliberately absent. Both the google-genai and the openai
+      # chat auto-configurations declare matchIfMissing = true, so leaving it unset is what
+      # activates both providers at once. Setting it to either name would silently disable
+      # the other one and take the fallback away.
+      #
+      # Everything else the OpenAI starter would auto-configure is switched off: only Gemini
+      # embeds (the migration pins vector_store to its 768 dimensions), and nothing on this
+      # site generates images, speech or moderation verdicts.
+      embedding: none
+      image: none
+      moderation: none
+      audio:
+        speech: none
+        transcription: none
+    google:
+      genai:
+        # Gemini Developer API key (not Vertex AI, which would need project-id + location).
+        # Shared by the chat and the embedding model.
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          model: ${GEMINI_CHAT_MODEL:gemini-2.0-flash}
+          # Low but not zero: the answer has to stay close to the retrieved context.
+          temperature: 0.2
+          # ~150 words of answer plus a little headroom, matching the system prompt's limit.
+          max-output-tokens: 400
+        embedding:
+          text:
+            model: ${GEMINI_EMBEDDING_MODEL:text-embedding-004}
+            # Pinned, not inherited: V5__knowledge.sql declares embedding vector(768), and
+            # pgvector refuses an HNSW index past 2,000 dimensions -- so a model change that
+            # altered the width would have to come with a migration. 768 is also this
+            # model's own default, so this is a guard rather than a reduction.
+            dimensions: 768
+            # Left at the default RETRIEVAL_DOCUMENT. One EmbeddingModel bean serves both
+            # ingestion and queries, so RETRIEVAL_QUERY cannot be set for questions alone
+            # without a second model; both sides being embedded the same way is what
+            # actually matters for cosine similarity.
+    openai:
+      # The fallback provider. Any OpenAI-compatible endpoint works; Spring AI 2.0 is built
+      # on the official OpenAI SDK, so this is the full base URL including the version
+      # segment (e.g. https://api.groq.com/openai/v1), not a host to append /v1 to.
+      base-url: ${FALLBACK_LLM_BASE_URL}
+      api-key: ${FALLBACK_LLM_API_KEY}
+      chat:
+        model: ${FALLBACK_LLM_MODEL}
+        temperature: 0.2
+        max-tokens: 400
+    vectorstore:
+      pgvector:
+        # Flyway owns the schema. Letting Spring AI create the table would race the
+        # migration and produce a vector_store nobody has a migration for.
+        initialize-schema: false
+        dimensions: 768
+        index-type: hnsw
+        distance-type: cosine_distance
+        table-name: vector_store
+
 server:
   shutdown: graceful
   forward-headers-strategy: framework
@@ -73,3 +140,30 @@ app:
     #     url: https://api.example.com
     #     health-path: /actuator/health
     services: []
+
+  chat:
+    # Retrieval. topK is small on purpose: five chunks of this site is already more context
+    # than a 150-word answer can use, and every extra chunk is tokens spent on the question.
+    top-k: 5
+    # Cosine similarity below this is noise rather than a weak match. A question about
+    # something the site does not cover should retrieve nothing and get an honest
+    # "I don't know", which only happens if the floor is high enough to reject near-misses.
+    similarity-threshold: 0.6
+    # Hard ceiling on the <context> block, applied after topK. Protects the token budget
+    # when the splitter produces unusually long chunks.
+    max-context-chars: 8000
+    # How long the primary model has to produce its first token before the request is
+    # handed to the fallback. Generous, because this is a cold call to a free tier: the
+    # visitor is already watching a "thinking" state, and a switch costs them the wait
+    # twice over, so it is worth waiting out a slow start.
+    first-token-timeout: 15s
+    # The rules the model answers under. A classpath resource rather than a string so it
+    # can be read, diffed and reviewed like the rest of the content.
+    system-prompt-resource: classpath:prompts/system.st
+    # The knowledge base. Every match is embedded on startup if its hash changed.
+    knowledge-location: classpath:knowledge/*.md
+    # Matches the contract's maxItems on ChatRequest.messages, and bounds the prompt.
+    max-messages: 10
+    # Whether ApplicationReadyEvent triggers ingestion. Off in the test profile, where the
+    # knowledge base is fixtures and each test seeds exactly what it needs.
+    ingest-on-startup: true
