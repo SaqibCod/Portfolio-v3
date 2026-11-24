@@ -1,5 +1,6 @@
 import { Archivo, JetBrains_Mono } from "next/font/google";
 
+import { ChatLauncher } from "@/components/chat/ChatLauncher";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { SkipLink } from "@/components/layout/SkipLink";
@@ -85,6 +86,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             {children}
           </main>
           <Footer siteLinks={footerSiteNav(statusPublished)} />
+          {/* Outside <main> and after the footer: a floating control is page
+              chrome, not content, so it belongs last in the tab order and
+              outside the landmark the skip link jumps to. */}
+          <ChatLauncher />
         </ThemeProvider>
       </body>
     </html>
