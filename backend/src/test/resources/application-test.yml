@@ -42,11 +42,18 @@ app:
     ingest-on-startup: false
 
 spring:
+  # The google-genai *connection* auto-configurations are not gated by spring.ai.model.*: they
+  # build their connection details from whatever credentials are present, and throw when there
+  # are none. Setting a fake key would silence them, but excluding them outright is the honest
+  # version -- it leaves nothing in the test context that holds a credential or knows a provider
+  # endpoint, so "no test can reach an LLM" is enforced by the wiring and not by a placeholder.
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.google.genai.autoconfigure.embedding.GoogleGenAiEmbeddingConnectionAutoConfiguration
   ai:
-    # No provider auto-configuration at all. This is what makes "tests never call a real LLM"
-    # a structural fact rather than a convention: with every selector set to `none` there is
-    # no Gemini client and no OpenAI client in the context to call. StubAiConfig supplies
-    # beans under the same names the auto-configurations would have used.
+    # No provider model auto-configuration at all, for the same reason: with every selector set
+    # to `none` there is no Gemini client and no OpenAI client in the context to call.
+    # StubAiConfig supplies beans under the same names the auto-configurations would have used.
     model:
       chat: none
       embedding: none
