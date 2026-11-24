@@ -33,11 +33,15 @@ public record ChatRequest(
 	 * nothing to retrieve against and nothing to answer. Rejecting it as a field error keeps that
 	 * a 400 with the same body shape as every other validation failure, rather than a 500 from
 	 * retrieval or, worse, a model asked to continue its own sentence.
+	 *
+	 * <p>Passes when there are no messages at all, deferring to {@code @NotEmpty} on the list.
+	 * Both constraints reporting the same empty array would hand the client two errors to fix
+	 * and one actual problem.
 	 */
 	@JsonIgnore
 	@AssertTrue(message = "must end with a message from the user")
 	public boolean isEndingWithUserMessage() {
-		return messages != null && !messages.isEmpty() && messages.getLast().role() == ChatRole.USER;
+		return messages == null || messages.isEmpty() || messages.getLast().role() == ChatRole.USER;
 	}
 
 	/** The visitor's question, which is what retrieval searches on. */
