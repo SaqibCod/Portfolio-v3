@@ -17,36 +17,32 @@ type Entry = {
 };
 
 /**
- * The MCA entry is real; everything still bracketed needs a value. Add or
- * remove entries freely — the timeline draws itself from this list.
+ * The timeline draws itself from this list, newest first.
+ *
+ * No CGPA on the MCA entry: it is a first-year result that does not exist yet,
+ * and an empty badge reads better than a bracketed one. Coursework is left out
+ * for the same reason — listing module names nobody has taken yet would be the
+ * one thing on this page that is not true.
  */
 const entries: Entry[] = [
   {
-    years: "[2026 – 2028]",
+    years: "2026 – 2028",
     status: "In progress",
     current: true,
     qualification: "Master of Computer Applications (MCA)",
     institution: "Indian Institute of Technology Patna",
     place: "Patna, India",
-    facts: ["[CONFIRM: CGPA]"],
-    coursework: ["[CONFIRM: list your coursework]"],
-    note: "[Optional: a project, a paper or a highlight — one or two lines.]",
+    facts: ["First year"],
+    note: "Focused on AI engineering and end-to-end systems — the projects on this site are where that happens.",
   },
   {
-    years: "[YYYY – YYYY]",
+    years: "[CONFIRM: YYYY – YYYY]",
     status: "Completed",
-    qualification: "[CONFIRM: bachelor’s degree, e.g. BCA or B.Sc Computer Science]",
-    institution: "[University name]",
-    place: "[City, Country]",
-    facts: ["[CONFIRM: CGPA or percentage]"],
+    qualification: "Bachelor of Computer Applications (BCA)",
+    institution: "Institute of Management and Education (IME)",
+    place: "Ghaziabad, India",
+    facts: ["7.5 CGPA"],
   },
-];
-
-/** [CONFIRM] Replace or remove. */
-const certifications = [
-  { name: "[Certification name]", issuer: "[Issuer]", year: "[Year]" },
-  { name: "[Certification name]", issuer: "[Issuer]", year: "[Year]" },
-  { name: "[Certification name]", issuer: "[Issuer]", year: "[Year]" },
 ];
 
 function Label({ children }: { children: React.ReactNode }) {
@@ -62,8 +58,9 @@ function Label({ children }: { children: React.ReactNode }) {
  * list's `::before` and a dot per entry, so the shape comes from the layout
  * rather than from decorative elements in the markup.
  *
- * The export's "Download CV" button is left out until there is a file to
- * download; a link to a missing PDF is worse than no link.
+ * The export's "Download CV" button and its certifications row are both left
+ * out: there is no CV file to link and no certification to list, and a dashed
+ * placeholder card advertises an absence rather than filling it.
  */
 export function Education() {
   return (
@@ -138,47 +135,6 @@ export function Education() {
             </li>
           ))}
         </ol>
-
-        <div className="mt-10">
-          <Label>Certifications</Label>
-          <ul
-            aria-label="Certifications"
-            className="mt-3.5 grid list-none gap-3.5 md:grid-cols-3"
-          >
-            {certifications.map((cert, index) => (
-              <li
-                key={`${cert.name}-${index}`}
-                className="flex items-start gap-3.5 rounded-lg border border-line border-dashed p-4.5"
-              >
-                <span
-                  aria-hidden="true"
-                  className="grad flex size-10 shrink-0 items-center justify-center rounded-md text-white"
-                >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="9" r="6" />
-                    <path d="M8.5 14.5 7 22l5-3 5 3-1.5-7.5" />
-                  </svg>
-                </span>
-                <span className="min-w-0">
-                  <b className="block text-[15px]">{cert.name}</b>
-                  <span className="mt-1 block font-mono text-chip text-mute">
-                    {cert.issuer} · {cert.year}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
       </Container>
     </Section>
   );

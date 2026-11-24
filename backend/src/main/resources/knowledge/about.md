@@ -8,33 +8,54 @@ url: /#about
 Saqib Choudhary (he goes by "Saq" on this site) is a software engineer and an MCA student at
 the Indian Institute of Technology Patna (IIT Patna). He is based in Delhi, India.
 
-He builds complete systems — the interface people use, the backend behind it, the data layer
-under that, and the AI parts where they add real value. He is interested in how software
-engineering is changing with AI, and he learns by shipping real projects rather than by
-following tutorials.
+## Summary
 
-He is currently open to internships.
+Saqib Choudhary is a first-year MCA (Master of Computer Applications) student at the Indian Institute of Technology (IIT) Patna, in the 2026–2028 session. He is interested in AI engineering and software engineering, and he enjoys building complete, end-to-end systems that span the frontend, the backend and AI integration.
 
-## What he works with
+He is currently looking for tech internships in AI engineering, software engineering and software development.
 
-Java, Spring Boot, Spring AI, Next.js, React, TypeScript, PostgreSQL, and
-retrieval-augmented generation (RAG). On this site specifically: Java 25, Spring Boot 4.1,
-Spring AI 2.0, PostgreSQL 18 with pgvector, Flyway, Next.js 16 with the App Router, React 19,
-Tailwind CSS v4, and TypeScript in strict mode.
+## Education
 
-## Where to find him
+| Degree | Institution | Duration | Result |
+|---|---|---|---|
+| MCA (Master of Computer Applications) | Indian Institute of Technology (IIT) Patna | 2026 – 2028 (pursuing) | In progress |
+| BCA (Bachelor of Computer Applications) | Institute of Management and Education (IME), Ghaziabad | Completed | 7.5 CGPA |
 
-- Email: saqibc097@gmail.com
-- GitHub: https://github.com/SaqibCod
-- LinkedIn: https://www.linkedin.com/in/saqib-chaudhary09/
+## Professional Interests
 
-The contact form on this site reaches the same inbox as the email address.
+- **AI Engineering:** building applications powered by LLMs and GenAI
+- **Software Engineering:** designing and building reliable, well-structured systems
+- **Development:** full-stack web development, from the frontend to the backend
 
-## Not on this site yet
+## Hobbies
 
-[CONFIRM: years of professional experience, previous employers and roles, and the dates of
-each one. Nothing on the site states these, so the assistant should say it does not know
-rather than estimate.]
+- Exploring new technologies
+- Traveling
+- Running
 
-[CONFIRM: degree completion date, undergraduate degree and institution, and any
-certifications.]
+## Currently Looking For
+
+Saqib is open to **internship opportunities** in:
+
+- AI Engineering
+- Software Engineering
+- Software Development
+
+Recruiters or collaborators can reach out to him through the contact options on this website.
+
+## Quick Facts (FAQ)
+
+**Who is Saqib Choudhary?**
+He is a first-year MCA student at IIT Patna (2026–28) who is interested in AI engineering and software engineering.
+
+**Where is Saqib studying?**
+He is pursuing an MCA at the Indian Institute of Technology (IIT) Patna, in the 2026–2028 session.
+
+**What did Saqib study before his MCA?**
+He completed a BCA at the Institute of Management and Education (IME), Ghaziabad, graduating with a 7.5 CGPA.
+
+**Is Saqib open to internships?**
+Yes. He is actively looking for internships in AI engineering, software engineering and development.
+
+**What does Saqib do outside of tech?**
+He enjoys traveling and running, and he likes exploring new technologies.

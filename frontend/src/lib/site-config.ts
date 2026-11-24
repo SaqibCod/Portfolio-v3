@@ -32,7 +32,7 @@ export const siteConfig = {
   headline: "I build software end to end, with AI where it adds real value",
   /** The meta description every page falls back to. Kept under 160 characters. */
   description:
-    "Saqib Choudhary, MCA student at IIT Patna, building end-to-end software systems with Optimize tech and AI.",
+    "Saqib Choudhary — MCA student at IIT Patna building end-to-end systems with Java, Spring Boot, Spring AI and Next.js. Open to internships.",
   email: "saqibc097@gmail.com",
   location: "Delhi, India",
   siteUrl: env.siteUrl,
@@ -47,7 +47,14 @@ export const siteConfig = {
   /** `Person.affiliation` — where the degree is being taken. */
   university: "Indian Institute of Technology Patna",
 
-  /** `Person.knowsAbout` — the subjects the site is actually about. */
+  /**
+   * `Person.knowsAbout` — the subjects the site is actually about.
+   *
+   * Drawn from the skills the knowledge base lists, and deliberately shorter
+   * than that list: this is structured data a search engine reads as a claim
+   * about expertise, so it names what the projects on this site demonstrate
+   * rather than everything that has ever been installed.
+   */
   knowsAbout: [
     "Java",
     "Spring Boot",
@@ -55,8 +62,14 @@ export const siteConfig = {
     "Next.js",
     "React",
     "TypeScript",
+    "Python",
     "PostgreSQL",
+    "pgvector",
     "Retrieval-augmented generation",
+    "Large language model integration",
+    "REST API design",
+    "Docker",
+    "CI/CD",
   ],
 
   nav: [
