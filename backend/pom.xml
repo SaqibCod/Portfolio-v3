@@ -18,7 +18,22 @@
 		<java.version>25</java.version>
 		<!-- Not managed by Spring Boot; newest release on Maven Central (checked 9 Nov 2026). -->
 		<bucket4j.version>8.22.0</bucket4j.version>
+		<!-- Newest 2.0.x patch on Maven Central (checked 23 Nov 2026). The plan pins the 2.0
+		     line on purpose; 2.1.0 exists but is a different minor. -->
+		<spring-ai.version>2.0.3</spring-ai.version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 		<!-- Web (Boot 4 renamed spring-boot-starter-web to spring-boot-starter-webmvc) -->
@@ -70,6 +85,28 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
+		<!-- AI (phase 08): Gemini answers and embeds, pgvector stores the chunks, and the OpenAI
+		     starter is pointed at any OpenAI-compatible endpoint to act as the fallback.
+		     `spring.ai.model.chat` is deliberately left unset in application.yml: both the
+		     google-genai and the openai chat auto-configurations match when that property is
+		     absent, which is what puts two ChatModel beans in the context side by side. -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-model-google-genai</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-model-google-genai-embedding</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-model-openai</artifactId>
 		</dependency>
 
 		<!-- Test (Boot 4.1 ships focused per-starter test modules; each pulls spring-boot-starter-test) -->

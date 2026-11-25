@@ -4,8 +4,11 @@ import dev.saq.portfolio.interceptor.RateLimitInterceptor;
 import dev.saq.portfolio.model.GuestbookStatus;
 import dev.saq.portfolio.model.StatusWindow;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.format.FormatterRegistry;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -15,8 +18,38 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
 	private final RateLimitInterceptor rateLimitInterceptor;
 
-	public WebMvcConfig(RateLimitInterceptor rateLimitInterceptor) {
+	private final AsyncTaskExecutor asyncTaskExecutor;
+
+	/**
+	 * @param asyncTaskExecutor qualified by name: {@code taskScheduler} is also an
+	 *                          {@code AsyncTaskExecutor}, and handing MVC's async support the
+	 *                          scheduler would put streaming responses on the same threads the
+	 *                          health probes and retention sweeps run on
+	 */
+	public WebMvcConfig(RateLimitInterceptor rateLimitInterceptor,
+			@Qualifier("applicationAsyncExecutor") AsyncTaskExecutor asyncTaskExecutor) {
+
 		this.rateLimitInterceptor = rateLimitInterceptor;
+		this.asyncTaskExecutor = asyncTaskExecutor;
+	}
+
+	/**
+	 * Hands Spring MVC's async handling the application's virtual-thread executor.
+	 *
+	 * <p>Without this, streaming a response falls back to a default
+	 * {@code SimpleAsyncTaskExecutor} that Spring itself warns at startup is "not suitable for
+	 * production use under load" — because that default starts a fresh <em>platform</em> thread
+	 * per request. {@code /api/v1/chat} is the only async handler on this API, so the warning
+	 * appeared the moment the chatbot streamed its first answer and nowhere before.
+	 *
+	 * <p>The executor injected here is the same virtual-thread one {@code @Async} uses. The
+	 * objection in Spring's warning is to unbounded platform threads, not to the executor type:
+	 * a {@code SimpleAsyncTaskExecutor} with virtual threads enabled is the right shape for work
+	 * that is almost entirely waiting on a language model, which is what this is.
+	 */
+	@Override
+	public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+		configurer.setTaskExecutor(asyncTaskExecutor);
 	}
 
 	@Override

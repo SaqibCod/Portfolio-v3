@@ -83,6 +83,9 @@
 
   --grad: linear-gradient(90deg, #7c3aed, #c026d3);
   --grad-shadow: 0 10px 30px -8px rgb(192 38 211 / 0.6);
+  /* The taller lift the home export gives the chat launcher, which floats over
+     the page rather than sitting in it. */
+  --grad-shadow-tall: 0 18px 40px -12px rgb(192 38 211 / 0.7);
   --ring: rgb(139 92 246 / 0.25);
 
   /* Decorative shapes only — never chrome, text or borders. */
@@ -227,6 +230,7 @@
   --radius-sm: 10px;
   --radius-md: 12px;
   --radius-input: 14px;
+  --radius-bubble: 16px;
   --radius-lg: 20px;
   --radius-card: 24px;
   --radius-xl: 28px;
@@ -396,6 +400,14 @@
 @utility grad {
   background: var(--grad);
   box-shadow: var(--grad-shadow);
+}
+
+/* The same gradient under a floating control. A separate utility rather than
+   `grad` plus a shadow override, because both would emit `box-shadow` into the
+   same layer and which one won would depend on declaration order. */
+@utility grad-float {
+  background: var(--grad);
+  box-shadow: var(--grad-shadow-tall);
 }
 
 /* Case-study prose. The export numbers each section heading with a small mono

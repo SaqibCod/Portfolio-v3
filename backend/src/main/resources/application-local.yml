@@ -13,6 +13,32 @@ spring:
     username: ${DB_USERNAME:portfolio}
     password: ${DB_PASSWORD:portfolio}
 
+  ai:
+    google:
+      genai:
+        # No usable placeholder: Gemini rejects a key that is not real, so /api/v1/chat
+        # answers 503 until GEMINI_API_KEY is a key this account owns. Create one at
+        # https://aistudio.google.com/apikey -- the free tier is enough for this site.
+        # The app still starts without it; only the chat endpoint is affected.
+        api-key: ${GEMINI_API_KEY:local-development-gemini-key}
+        embedding:
+          # The embedding connection does not inherit the chat one; see application.yml.
+          api-key: ${GEMINI_API_KEY:local-development-gemini-key}
+    openai:
+      # The primary. Groq's OpenAI-compatible endpoint by default; a fake key here means
+      # the chat falls through to Gemini, and a fake key in both is the 503 path.
+      base-url: ${OPENAI_COMPAT_BASE_URL:https://api.groq.com/openai/v1}
+      api-key: ${OPENAI_COMPAT_API_KEY:local-development-primary-key}
+      chat:
+        # Groq retires model names too, and the llama-3.3-70b-versatile that used to be
+        # the obvious default now answers "model does not exist or you do not have
+        # access". Checked against the account's own list:
+        #   curl -H "Authorization: Bearer $OPENAI_COMPAT_API_KEY" \
+        #     https://api.groq.com/openai/v1/models
+        # gpt-oss-120b streams its first token in about a second and keeps its reasoning
+        # in a separate `reasoning` field, so none of it reaches the answer text.
+        model: ${OPENAI_COMPAT_MODEL:openai/gpt-oss-120b}
+
 app:
   # app.api.base-url is inherited from application.yml on purpose: problem `type` URIs stay
   # identical in every environment, so a client can match on them regardless of where it points.

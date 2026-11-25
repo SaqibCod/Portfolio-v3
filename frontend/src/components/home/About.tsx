@@ -1,3 +1,4 @@
+import { AskAiButton } from "@/components/chat/AskAiButton";
 import { AboutObjects } from "@/components/home/FloatingObjects";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
@@ -9,9 +10,9 @@ import { siteConfig } from "@/lib/site-config";
  * `.about` — section 01. The one paragraph that has to land, with the facts
  * row under it.
  *
- * The export also puts an "Ask the AI about me" button here. The chatbot is a
- * later phase, so only the link that works today is rendered rather than a
- * button that would do nothing.
+ * The export's first call to action here is "Ask the AI about me", which opens
+ * the chat panel. It is a one-line client component so this section stays
+ * server-rendered: its paragraph is the most important text on the site.
  */
 export function About() {
   return (
@@ -59,11 +60,9 @@ export function About() {
         </ul>
 
         <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <ButtonLink href="/tech" variant="primary" className="max-md:w-full">
+          <AskAiButton className="max-md:w-full" />
+          <ButtonLink href="/tech" className="max-md:w-full">
             How this site works
-          </ButtonLink>
-          <ButtonLink href="/projects" className="max-md:w-full">
-            See the work
           </ButtonLink>
         </div>
       </Container>

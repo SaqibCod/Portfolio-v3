@@ -11,6 +11,151 @@ spring:
   flyway:
     enabled: true
 
+  # AI (phase 08). An OpenAI-compatible endpoint (Groq by default) answers; Gemini is the
+  # fallback for chat and, regardless of tier, the only thing that embeds.
+  #
+  # The tiers were the other way round until the feature was measured against both. Gemini's
+  # free tier is 20 requests per day per model, so for most of any given day it answered 429
+  # and every question paid the first-token timeout before the fallback replied anyway. Groq
+  # is roughly three times faster to its first token and far less restricted, so it leads and
+  # Gemini covers it. Which provider sits in which tier lives in AiModelConfig; the SSE
+  # `done.model` values stay "primary" and "fallback", because they name the tier rather than
+  # the vendor and are published in the contract.
+  ai:
+    retry:
+      # One attempt, no retries. The default is ten, and ten attempts with backoff against
+      # a provider that is out of quota for the day took 47 seconds to arrive at the 429 it
+      # returned immediately the first time -- all of it before ChatService could switch
+      # tiers, which then answered in one second. Measured on Gemini while it led; it
+      # applies to whichever provider is in front.
+      #
+      # This application already has a better answer to a failing provider than trying
+      # it again: a different provider. Retrying is the wrong remedy for the failures
+      # that actually happen here (quota exhausted, model retired, key invalid), and it
+      # turns a fast failover into a timeout.
+      max-attempts: 1
+    chat:
+      client:
+        # Two ChatModel beans make Spring AI's single auto-configured ChatClient.Builder
+        # ambiguous, and there is no useful "default" client here anyway -- AiModelConfig
+        # builds one client per provider, each with its own qualifier.
+        enabled: false
+    model:
+      # spring.ai.model.chat is deliberately absent. Both the google-genai and the openai
+      # chat auto-configurations declare matchIfMissing = true, so leaving it unset is what
+      # activates both providers at once. Setting it to either name would silently disable
+      # the other one and take the fallback away.
+      #
+      # Everything else the OpenAI starter would auto-configure is switched off: embedding is
+      # Gemini's job whichever tier it answers chat in (the migration pins vector_store to its
+      # 768 dimensions), and nothing on this site generates images, speech or moderation
+      # verdicts.
+      embedding: none
+      image: none
+      moderation: none
+      audio:
+        speech: none
+        transcription: none
+    google:
+      genai:
+        # Gemini Developer API key (not Vertex AI, which would need project-id + location).
+        # Shared by the chat and the embedding model.
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          # Verified by actually calling it (24 Nov 2026), not from memory and not from
+          # Spring AI's default. Two traps here, both of which cost a debugging session:
+          #
+          #  - ListModels is not a list of models a key may use. gemini-2.5-flash is
+          #    listed and answers 404 "no longer available to new users"; so does
+          #    gemini-2.0-flash, which is Spring AI's own default.
+          #  - gemini-flash-latest looks like the safe choice and is the opposite. It was
+          #    resolving to an overloaded model on the day this was set, so the alias
+          #    would have taken the feature down with it. A pinned version makes a model
+          #    change a visible commit instead of a surprise outage.
+          #
+          # To re-check, send a real generateContent request rather than reading the list:
+          #   curl -X POST -H "x-goog-api-key: $GEMINI_API_KEY" \
+          #     -H 'Content-Type: application/json' \
+          #     -d '{"contents":[{"role":"user","parts":[{"text":"hi"}]}]}' \
+          #     https://generativelanguage.googleapis.com/v1beta/models/<model>:generateContent
+          model: ${GEMINI_CHAT_MODEL:gemini-3.5-flash}
+          # Low but not zero: the answer has to stay close to the retrieved context.
+          temperature: 0.2
+          # Thinking off. On a 3.x flash model the thinking tokens are drawn from the same
+          # budget as the answer, so with this unset every reply was cut off mid-sentence
+          # at about eleven words and took ~14s to say them. The knowledge base documents
+          # the same trap being hit in Medi-Scan, which is where the fix came from.
+          # There is nothing to reason about here anyway: the answer is a short summary of
+          # context that has already been retrieved and handed over.
+          thinking-budget: 0
+          # ~150 words of answer plus headroom, matching the system prompt's limit. Only
+          # meaningful now that thinking is not eating into it.
+          max-output-tokens: 400
+        embedding:
+          # Set again, not inherited. The reference docs say the chat and embedding
+          # connections are shared, and in 2.0.3 they are not:
+          # GoogleGenAiEmbeddingConnectionProperties binds its own api-key under
+          # spring.ai.google.genai.embedding, and finding none it falls through to
+          # Vertex AI mode and fails startup with "project-id must be set".
+          api-key: ${GEMINI_API_KEY}
+          text:
+            # Also verified against ListModels: text-embedding-004 is a Vertex AI model
+            # name that the Developer API does not serve, and asking for it fails with
+            # "not found for API version v1beta, or is not supported for embedContent".
+            # Only gemini-embedding-001 and the gemini-embedding-2 family are available.
+            model: ${GEMINI_EMBEDDING_MODEL:gemini-embedding-001}
+            # Load-bearing, not a formality. gemini-embedding-001 emits 3,072 dimensions
+            # by default and pgvector refuses an HNSW index above 2,000, so without this
+            # pin the index in V5__knowledge.sql could not be built at all. 768 is one of
+            # the widths this model supports natively and is what `vector(768)` declares;
+            # changing it means a new migration and a full re-ingestion.
+            dimensions: 768
+            # No task-type setting here, and setting one would be theatre: Spring AI 2.0.3
+            # reads `task-type`, defaults it to RETRIEVAL_DOCUMENT, merges it through its
+            # options -- and then never puts it in the request. The code says so:
+            # GoogleGenAiTextEmbeddingModel builds its EmbedContentConfig with only
+            # outputDimensionality, above a comment reading "as the new SDK might not have
+            # a direct taskType field".
+            #
+            # The cost is real. Gemini returns retrieval-tuned vectors for
+            # RETRIEVAL_QUERY/RETRIEVAL_DOCUMENT; with no task type it returns general
+            # ones, and question-to-document similarity compresses from roughly 0.65 to
+            # roughly 0.52 on this corpus. Ranking survives -- the right file still comes
+            # top -- so the practical effect is that app.chat.similarity-threshold has to
+            # be calibrated against that lower band, which it is.
+            #
+            # Fixing it properly means supplying a custom EmbeddingModel bean that calls
+            # embedContent with a task type, re-ingesting as RETRIEVAL_DOCUMENT and
+            # embedding questions as RETRIEVAL_QUERY. Worth revisiting on the 2.1 upgrade,
+            # in case the library starts sending it.
+    openai:
+      # The primary provider: Groq by default, but any OpenAI-compatible endpoint works,
+      # which is why these variables are named for the protocol rather than the vendor.
+      # Spring AI 2.0 is built on the official OpenAI SDK, so this is the full base URL
+      # including the version segment (e.g. https://api.groq.com/openai/v1), not a host to
+      # append /v1 to.
+      base-url: ${OPENAI_COMPAT_BASE_URL}
+      api-key: ${OPENAI_COMPAT_API_KEY}
+      chat:
+        model: ${OPENAI_COMPAT_MODEL}
+        temperature: 0.2
+        # The same fix as Gemini's thinking-budget, under a different name. gpt-oss models
+        # reason before answering, and at the default effort a question over five retrieved
+        # chunks took ~40s end to end against ~1s for a bare prompt. There is nothing here
+        # worth reasoning about: the context has already been retrieved and the job is to
+        # summarise it. Ignored by providers and models that do not reason.
+        reasoning-effort: low
+        max-tokens: 400
+    vectorstore:
+      pgvector:
+        # Flyway owns the schema. Letting Spring AI create the table would race the
+        # migration and produce a vector_store nobody has a migration for.
+        initialize-schema: false
+        dimensions: 768
+        index-type: hnsw
+        distance-type: cosine_distance
+        table-name: vector_store
+
 server:
   shutdown: graceful
   forward-headers-strategy: framework
@@ -73,3 +218,62 @@ app:
     #     url: https://api.example.com
     #     health-path: /actuator/health
     services: []
+
+  chat:
+    # Retrieval. topK is small on purpose: five chunks of this site is already more context
+    # than a 150-word answer can use, and every extra chunk is tokens spent on the question.
+    top-k: 5
+    # Cosine similarity below this is noise rather than a weak match: a question the site
+    # does not cover has to retrieve nothing, so the model has nothing to work from and
+    # says so.
+    #
+    # Measured, because the plausible-sounding 0.6 this started at broke the feature
+    # outright. Gemini embeddings arrive here without a task type (see the note under
+    # spring.ai.google.genai.embedding.text) and compress into a narrow band, and 0.6 sat
+    # above almost all of it -- so ordinary questions like "what are his qualifications"
+    # retrieved nothing and got an honest "I don't have that on the site" about content
+    # sitting in about.md. Top similarity per question, same corpus:
+    #
+    #   what is his qualifications     0.544   skills, resume, about    should answer
+    #   what school he blong to        0.521   about                    should answer
+    #   is Saq good with Kubernetes    0.611   skills                   should decline *
+    #   who won the 1998 World Cup?    0.429   nothing relevant         should decline
+    #
+    # * retrieving skills.md there is correct -- it is the right file to check, and it
+    #   does not mention Kubernetes, so that decline has to come from the model reading
+    #   the context rather than from the threshold hiding it. The threshold's only job is
+    #   the last row: 0.47 clears the 0.43 of a genuinely unrelated question while
+    #   passing the 0.50+ of a real one. Ranking was never the problem -- the right file
+    #   is top for the right question in every case above.
+    #
+    # Query-time only, so changing this needs no re-ingestion. Re-measure after editing
+    # the knowledge base, and watch both directions: the answerable and the unanswerable
+    # questions in chat-eval.md move in opposite directions.
+    similarity-threshold: 0.47
+    # Hard ceiling on the <context> block, applied after topK. Protects the token budget
+    # when the splitter produces unusually long chunks.
+    max-context-chars: 8000
+    # How long the primary model has to produce its first token before the request is
+    # handed to the fallback.
+    #
+    # Set from measurement rather than caution. Observed first tokens: the Groq primary ~1s,
+    # the Gemini fallback ~3s when it has quota. The number that matters is not how long a
+    # healthy primary takes but how much dead time a *broken* one costs, because this budget
+    # is spent in full on every request while the primary is failing.
+    #
+    # 8s is many times the primary's normal worst case and is now rarely reached at all --
+    # it mattered far more when Gemini led and spent most of the day out of quota. It has to
+    # be a timeout rather than an error check either way: the Google SDK retries a 429
+    # internally, so an error that arrives in under a second when Gemini is called directly
+    # does not surface to this application quickly.
+    first-token-timeout: 8s
+    # The rules the model answers under. A classpath resource rather than a string so it
+    # can be read, diffed and reviewed like the rest of the content.
+    system-prompt-resource: classpath:prompts/system.st
+    # The knowledge base. Every match is embedded on startup if its hash changed.
+    knowledge-location: classpath:knowledge/*.md
+    # Matches the contract's maxItems on ChatRequest.messages, and bounds the prompt.
+    max-messages: 10
+    # Whether ApplicationReadyEvent triggers ingestion. Off in the test profile, where the
+    # knowledge base is fixtures and each test seeds exactly what it needs.
+    ingest-on-startup: true

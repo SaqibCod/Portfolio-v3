@@ -2,86 +2,99 @@ export const meta = {
   title: "Medi-Scan",
   kind: "AI · Full-stack",
   summary:
-    "Upload a lab report and get a plain-language explanation of every value, backed by retrieved medical references.",
+    "Upload a lab report and get every value checked against its own reference range, flagged, and explained in plain language — with a chat that refuses to invent a number.",
   // [CONFIRM] Replace both dates with the real ones.
   date: "2026-06-15",
-  updated: "2026-10-05",
+  updated: "2026-11-24",
   tags: ["AI", "Backend", "Frontend"],
   stack: [
     "Next.js",
+    "Spring Boot",
     "Spring AI",
     "pgvector",
-    "Gemini / Ollama",
-    "Resilience4j",
+    "Tesseract OCR",
   ],
   featured: true,
-  role: "[CONFIRM: solo — design, backend, frontend]",
-  timeline: "[CONFIRM: Month YYYY – Month YYYY]",
+  role: "Solo — system design, backend, frontend",
+  timeline: "2026 — built, deployment in progress",
   // [CONFIRM] Add `demoUrl` and `repoUrl` once deployed and public.
 };
 
 ## Overview
 
-Medi-Scan turns a lab report into something you can actually read. Every value
-is explained in ordinary language, with the reference range it is measured
-against and a citation back to the source the explanation came from. It runs on
-a zero-cost stack, and falls back to a second model automatically when the
-primary one is unavailable.
+Medi-Scan explains a lab report in plain language. You upload it as a PDF, a photo or pasted
+text — or pick one of three synthetic samples — and it reads every value, checks each one
+against the reference range **printed on that report**, flags it LOW, NORMAL or HIGH, and
+writes a summary at roughly a sixth-grade reading level. Then you can ask questions about it in
+a chat.
 
-[CONFIRM: two or three sentences on who it is for and what prompted it.]
+The point of the project is not the chatbot. It is that the AI pipeline is measured, private
+and bounded: a model never decides a number, nothing unmasked reaches the model, and the whole
+thing runs on free tiers under a hard $0 ceiling.
+
+Medi-Scan explains what a report says. It is not medical advice and it does not diagnose.
 
 <MetricTiles
   items={[
-    { value: "[N]", label: "[e.g. reports analysed]" },
-    { value: "[N s]", label: "[e.g. median analysis time]" },
-    { value: "[N%]", label: "[e.g. values matched to a reference range]" },
+    { value: "[ADD]%", label: "flag accuracy on text reports" },
+    { value: "[ADD]", label: "dangerous flag errors (target 0)" },
+    { value: "$0", label: "running cost, free tiers only" },
   ]}
 />
 
 ## The problem
 
-A lab report is a table of numbers written for someone who already knows what
-they mean. The patient holding it gets a column of values, a reference range in
-small print, and no explanation — so the next step is usually a search engine
-and an afternoon of worry.
+A lab report is a table of numbers written for someone who already knows what they mean. The
+patient holding it gets a column of values, a reference range in small print, and no
+explanation — so "LDL 162 mg/dL, range &lt;100" turns into a search engine and an afternoon of
+worry, or a wait of several days to ask a doctor.
 
-[CONFIRM: the specific report or moment that started this, in one scenario.]
+Pasting it into a general chatbot replaces that with three worse problems:
 
-[CONFIRM: the constraint you set yourself — for example never inventing a
-number, never giving a diagnosis, or running entirely on free tiers.]
+1. **It can be confidently wrong.** It misreads a digit, or decides a value is high using its
+   own idea of "normal" rather than the range on the page.
+2. **It is a privacy hole.** Reports carry names, patient IDs, phone numbers and dates of
+   birth.
+3. **It drifts into diagnosis.** Asked "is this serious?", a general model answers.
+
+Every design decision below exists because of one of those three.
 
 ## Architecture
 
-An uploaded report is parsed into individual values, each value is matched
-against retrieved reference material in the vector store, and the model is
-asked to explain only what it was given. If the primary model fails or times
-out, the circuit breaker switches to the local fallback and the response says
-which model answered.
+The browser uploads a report and gets an id immediately, then polls for status while a
+background worker runs the pipeline: extract text, mask personal data, ask the model for the
+printed strings, verify and compute the flags **in code**, then ask the model a second time for
+the summary. Only masked text ever reaches the model or the database; raw text stays in memory
+and is discarded.
 
 <ArchDiagram
-  label="An upload goes from the Next.js UI to the Spring Boot API, which parses the report, retrieves matching reference material from pgvector, and asks the primary LLM for an explanation. A circuit breaker routes to a local fallback model when the primary is unavailable."
+  label="A report is uploaded from the Next.js UI to the Spring Boot API, which extracts text with PDFBox or Tesseract OCR, masks personal data, asks Gemini for the printed values, verifies and flags them in code, then asks Gemini for a summary. Results and curated biomarker pages live in PostgreSQL with pgvector, which the report chat retrieves from."
   rows={[
     [
-      { title: "Next.js UI", sub: "upload · results" },
-      { title: "Spring Boot API", sub: "parse · retrieve · explain", accent: true },
-      { title: "Gemini", sub: "primary model" },
+      { title: "Next.js UI", sub: "upload · results · chat" },
+      { title: "Spring Boot API", sub: "extract · mask · verify · flag", accent: true },
+      { title: "Gemini", sub: "extract, then summarise" },
     ],
     [
-      { title: "Reference corpus", sub: "chunk · embed" },
-      { title: "pgvector", sub: "similarity search" },
-      { title: "Ollama", sub: "fallback model" },
+      { title: "PDFBox · Tesseract", sub: "text and scanned pages" },
+      { title: "Masking", sub: "regex + OpenNLP names" },
+      { title: "pgvector", sub: "curated biomarker pages" },
     ],
   ]}
-  caption="[CONFIRM: adjust the boxes to match Medi-Scan’s real components.]"
+  caption="Two model calls with a verification step between them; the flags are computed by the middle box, never by the right-hand one."
 />
 
+The verification step is the whole design in one rule: a value the model returns has to appear
+word-for-word in the extracted text, or it is dropped.
+
 <CodeBlock
-  filename="AnalysisService.java"
-  code={`@CircuitBreaker(name = "primaryModel", fallbackMethod = "explainWithFallback")
-public AnalysisResponse explain(ReportValues values) {
-    var context = referenceStore.search(values.terms());
-    return mapper.toResponse(primaryModel.call(prompt(values, context)));
-}`}
+  filename="Verification rule"
+  code={`// The model is asked only for strings exactly as printed.
+// Code parses them, checks them against the source, and decides the flag.
+var verified = extracted.stream()
+    .filter(row -> reportText.contains(row.rawValue()))
+    .map(row -> flagger.flag(row, Range.parse(row.rawRange())))
+    .toList();`}
 />
 
 ## Key decisions
@@ -89,19 +102,34 @@ public AnalysisResponse explain(ReportValues values) {
 <Decisions
   items={[
     {
-      title: "A second model instead of a retry",
+      title: "The model never decides a number or a flag",
       body:
-        "Retrying a rate-limited model just fails more slowly. A circuit breaker in front of a local fallback keeps the feature answering, and the response names the model so the degradation is visible rather than silent.",
+        "Extraction asks for test name, value, unit and range as printed strings only. Plain code parses them and computes LOW, NORMAL or HIGH. A model can misread a digit or invent one; code is predictable and testable, so anything that has to be correct lives there.",
     },
     {
-      title: "[CONFIRM: how reports are parsed]",
+      title: "Two model calls instead of one",
       body:
-        "[What you chose for extracting values, what you rejected, and how you handle a format you have never seen.]",
+        "The first extracts, code checks the result, and the second writes the summary from the checked data alone. One combined call lets the prose contradict the flags — and the prose is what people actually read.",
     },
     {
-      title: "[CONFIRM: what the product refuses to do]",
+      title: "Masking happens before the model sees anything",
       body:
-        "[The line you drew — no diagnosis, no advice, no stored reports — and how the UI makes that clear.]",
+        "Regex rules plus an Apache OpenNLP name model hide names, IDs, phone numbers, emails and dates of birth, and an integrity check proves masking never alters a lab value. A canary test plants a fake name and fails if it ever appears in a log, the database or a prompt.",
+    },
+    {
+      title: "A number guard on every chat answer",
+      body:
+        "Answers are checked sentence by sentence as they stream. A sentence containing a number that is not on the report stops the answer there. Invented reference ranges are the main risk in a health chat, so the guard sits between the model and the screen rather than in the prompt.",
+    },
+    {
+      title: "OCR admits when it is unsure",
+      body:
+        "If Tesseract was not confident about a value's characters, the value is shown but its flag becomes UNKNOWN and the reader is told to check the paper report. OCR can turn 5.4 into 54, and a confident wrong flag is the worst outcome this app has.",
+    },
+    {
+      title: "Tesseract runs as a separate process",
+      body:
+        "A native crash inside a JNI library takes the whole server with it. A process can be timed out and killed, which matters on a 2 GB instance running one OCR job at a time.",
     },
   ]}
 />
@@ -110,30 +138,45 @@ public AnalysisResponse explain(ReportValues values) {
 
 <DemoSlot
   label="Medi-Scan demo"
-  note="[CONFIRM] Add `demoUrl` to this file’s meta and swap this slot for the live embed. Use a synthetic report in the recording — never a real one."
+  note="[CONFIRM] Add `demoUrl` to this file's meta and swap this slot for the live embed. Use one of the synthetic sample reports in the recording — never a real one."
 />
 
 ## Challenges & results
+
+An evaluation set is what turns "it seems to work" into numbers: roughly 31 synthetic reports
+with hand-written answer keys, plus photo and scanned versions, plus about 40 chat questions. It
+scores extraction accuracy, flag correctness, dangerous flag errors, personal-data leaks,
+invented numbers and correct refusals. Responses are cached on disk so re-scoring after a code
+change costs no API calls — which is what makes measuring affordable on a free tier.
 
 <TwoUp
   items={[
     {
       eyebrow: "Hardest bug",
-      body: "[What broke, how you tracked it down, and what actually fixed it.]",
+      body:
+        "Duplicating a browser tab copies session storage, so two tabs shared one refresh token. Reuse detection did its job and signed the user out everywhere. The fix was a tab-id handshake over BroadcastChannel: the copy notices it is a copy, drops the token and signs in fresh. Close behind it: calls taking 50–57 seconds against a 30-second timeout, because the framework was retrying on top of the app's own retries.",
     },
     {
       eyebrow: "What I learned",
-      body: "[The one lesson you would carry into the next project.]",
+      body:
+        "Let the model do language and let code do decisions. Everything that had to be correct — parsing, ranges, flags, which sentences are allowed through — moved out of the prompt and into code with tests behind it, and that is what made the AI output trustworthy enough to put in front of someone reading their own blood work.",
     },
   ]}
 />
+
+Measured results are pending the final evaluation run: extraction recall and precision, flag
+accuracy, dangerous flag errors (target 0), personal-data leaks (target 0), invented numbers in
+chat (target 0) and correct refusals (target 100%). Street addresses are a known masking gap and
+are reported as such rather than quietly omitted. The suites behind it are large — the client
+tests alone number 450+ — and the accessibility pass targets WCAG 2.2 AA.
 
 ### What I would do next
 
 <Ticks
   items={[
-    "[CONFIRM: next improvement]",
-    "[CONFIRM: next improvement]",
-    "[CONFIRM: next improvement]",
+    "Mask street addresses, the one personal-data type still getting through",
+    "More biomarker pages, each reviewed against a cited source",
+    "Move the job queue into Postgres so more than one instance can run",
+    "Support reports in languages other than English",
   ]}
 />
