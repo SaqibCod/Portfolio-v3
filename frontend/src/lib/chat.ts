@@ -37,6 +37,39 @@ export type ChatStreamEvent =
    */
   | { type: "error"; message: string; retryAfterSeconds?: number };
 
+/**
+ * Strips the markdown a model emits despite being told not to.
+ *
+ * The panel renders answers as literal text — deliberately, because the text comes
+ * from a language model and nothing on that path is trusted enough to render as
+ * markup. The consequence is that any markdown the model writes reaches the visitor
+ * with its syntax showing: `**Medi-Scan**` appears with the asterisks.
+ *
+ * The system prompt forbids it and Gemini obeys; `gpt-oss` on the fallback does not.
+ * Since the set of models is expected to change and each one has its own formatting
+ * habits, this is handled here rather than by prompting alone — a visible defect
+ * should not depend on every future model agreeing to be polite.
+ *
+ * Only emphasis and list markers are touched, and only the characters that are
+ * unambiguously syntax. Nothing is converted *to* markup, so the rendering stays
+ * plain text either way.
+ */
+export function stripMarkdown(text: string): string {
+  return (
+    text
+      // Bold and italic fences. Removed unconditionally rather than only in matched
+      // pairs: a stray `**` is never meaningful prose, and waiting for the closing
+      // fence would make the asterisks appear and then vanish mid-stream.
+      .replace(/\*\*/g, "")
+      .replace(/__/g, "")
+      // Inline code fences, which the model sometimes puts around a technology name.
+      .replace(/`/g, "")
+      // Leading bullet and heading markers, kept as plain lines.
+      .replace(/^[ \t]*[-*+][ \t]+/gm, "")
+      .replace(/^[ \t]*#{1,6}[ \t]+/gm, "")
+  );
+}
+
 /** Copy for the two failures a visitor can actually do something about. */
 const UNAVAILABLE_MESSAGE =
   "The assistant is resting. Try again soon or use the contact form.";

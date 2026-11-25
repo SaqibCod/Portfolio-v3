@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { streamChat } from "@/lib/chat";
+import { streamChat, stripMarkdown } from "@/lib/chat";
 
 import type { ChatStreamEvent } from "@/lib/chat";
 
@@ -204,5 +204,51 @@ describe("streamChat", () => {
         { role: "user", content: "What is it written in?" },
       ],
     });
+  });
+});
+
+describe("stripMarkdown", () => {
+  it("removes bold fences a model leaves in", () => {
+    // Observed for real: gpt-oss on the fallback writes "**Medi-Scan**" however firmly
+    // the system prompt asks for plain prose.
+    expect(stripMarkdown("Saq built **Medi-Scan**, an analyser.")).toBe(
+      "Saq built Medi-Scan, an analyser.",
+    );
+  });
+
+  it("removes underscore emphasis and inline code fences", () => {
+    expect(stripMarkdown("He uses __Spring AI__ with `pgvector`.")).toBe(
+      "He uses Spring AI with pgvector.",
+    );
+  });
+
+  it("turns bullet lines into plain lines", () => {
+    expect(stripMarkdown("Projects:\n- Medi-Scan\n* githMind")).toBe(
+      "Projects:\nMedi-Scan\ngithMind",
+    );
+  });
+
+  it("removes heading markers", () => {
+    expect(stripMarkdown("## Overview\nHe builds systems.")).toBe(
+      "Overview\nHe builds systems.",
+    );
+  });
+
+  it("leaves ordinary prose untouched", () => {
+    const prose = "Saq is an MCA student at IIT Patna, open to internships.";
+    expect(stripMarkdown(prose)).toBe(prose);
+  });
+
+  it("leaves a lone asterisk and a hyphenated word alone", () => {
+    // Only unambiguous syntax is stripped: a mid-sentence hyphen is not a bullet, and
+    // a single asterisk is not an emphasis fence.
+    expect(stripMarkdown("The retrieval-augmented answer scored 5 * 3 points.")).toBe(
+      "The retrieval-augmented answer scored 5 * 3 points.",
+    );
+  });
+
+  it("strips a fence that arrived split across two tokens", () => {
+    // The hook accumulates raw text before stripping for exactly this reason.
+    expect(stripMarkdown("Saq built *" + "*Medi-Scan**.")).toBe("Saq built Medi-Scan.");
   });
 });

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { MAX_MESSAGES, streamChat } from "@/lib/chat";
+import { MAX_MESSAGES, streamChat, stripMarkdown } from "@/lib/chat";
 
 import type { ChatMessage, ChatSource } from "@/lib/chat";
 
@@ -100,9 +100,13 @@ export function useChatStream(): UseChatStream {
 
         switch (event.type) {
           case "token":
+            // `answer` keeps the raw text so the stripping always sees whole syntax; a
+            // `**` split across two tokens would survive a per-token strip.
             answer += event.text;
             setIsThinking(false);
-            setTurns((previous) => replaceLastAssistant(previous, { content: answer }));
+            setTurns((previous) =>
+              replaceLastAssistant(previous, { content: stripMarkdown(answer) }),
+            );
             break;
 
           case "sources":
@@ -114,9 +118,11 @@ export function useChatStream(): UseChatStream {
             // Recorded so the next question carries this answer as context —
             // "what is it written in?" only works if the model sees what "it"
             // referred to.
+            // Stripped, so the next turn's context is the answer the visitor actually
+            // read rather than the asterisks they did not.
             historyRef.current = [
               ...historyRef.current,
-              { role: "assistant" as const, content: answer },
+              { role: "assistant" as const, content: stripMarkdown(answer) },
             ].slice(-MAX_MESSAGES);
             setIsStreaming(false);
             setIsThinking(false);
