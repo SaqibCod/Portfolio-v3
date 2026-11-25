@@ -129,12 +129,28 @@ Four real defects, each found only by running it and none caught by the test sui
 
 ### Operational notes
 
-- **The free tier runs out fast.** Roughly a dozen questions exhausted the quota and everything
-  after that was a 429. For a public site this makes `FALLBACK_LLM_API_KEY` effectively
-  required, not optional — without it the chat answers 503 for the rest of the day.
-- **Latency is 3–30 seconds end to end**, which is why `first-token-timeout` is 15s and why the
-  panel streams rather than waiting. The 30s cases were still answered: only the *first* token
-  is timed.
+- **Gemini's free tier is 20 generate-content requests per day, per model**, and the 429 names
+  the figure along with how long until it resets (`Please retry in 7h16m`). That is the single
+  most important number for this feature: roughly twenty questions a day, then nothing. For a
+  public site `FALLBACK_LLM_API_KEY` is therefore **required**, not a nice-to-have — without it
+  the chat answers 503 for the rest of the day, every day.
+- **Groq retires model names too.** `llama-3.3-70b-versatile` answers "the model does not exist
+  or you do not have access to it". Check with
+  `curl -H "Authorization: Bearer $FALLBACK_LLM_API_KEY" https://api.groq.com/openai/v1/models`;
+  `openai/gpt-oss-120b` is the current default and streams its first token in about a second.
+- **Latency, measured**: a healthy Gemini is ~3s to its first token; the Groq fallback ~1s. With
+  the primary out of quota a request costs `first-token-timeout` plus the fallback, which is why
+  that budget is 8s rather than the 15s it started at — the full budget is spent on *every*
+  request once the primary is failing.
+- **Turn Spring AI's retries off.** `spring.ai.retry.max-attempts` defaults to **10**, and ten
+  attempts with backoff against a provider that is out of quota for the day took 47 seconds to
+  reach a 429 that arrives in under one second when called directly. This application's answer
+  to a failing provider is a different provider, which is strictly better than asking the same
+  one again.
+- **Worth considering: swap the tiers.** Groq is faster, has a far more generous free tier, and
+  answered every question correctly during this run. Gemini as primary means most of the day is
+  spent paying the failover penalty. That is an architectural decision rather than a fix, so it
+  is left as a question, not a change.
 - **Answers name the contact path literally** ("the contact form at /#contact"). Accurate but
   raw; worth a prompt tweak to say "the contact form on this site" instead.
 
