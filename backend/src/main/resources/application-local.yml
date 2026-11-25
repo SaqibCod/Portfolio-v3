@@ -30,7 +30,14 @@ spring:
       base-url: ${FALLBACK_LLM_BASE_URL:https://api.groq.com/openai/v1}
       api-key: ${FALLBACK_LLM_API_KEY:local-development-fallback-key}
       chat:
-        model: ${FALLBACK_LLM_MODEL:llama-3.3-70b-versatile}
+        # Groq retires model names too, and the llama-3.3-70b-versatile that used to be
+        # the obvious default now answers "model does not exist or you do not have
+        # access". Checked against the account's own list:
+        #   curl -H "Authorization: Bearer $FALLBACK_LLM_API_KEY" \
+        #     https://api.groq.com/openai/v1/models
+        # gpt-oss-120b streams its first token in about a second and keeps its reasoning
+        # in a separate `reasoning` field, so none of it reaches the answer text.
+        model: ${FALLBACK_LLM_MODEL:openai/gpt-oss-120b}
 
 app:
   # app.api.base-url is inherited from application.yml on purpose: problem `type` URIs stay

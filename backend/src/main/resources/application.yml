@@ -14,6 +14,17 @@ spring:
   # AI (phase 08). Gemini answers and embeds; the OpenAI starter is pointed at an
   # OpenAI-compatible endpoint and only ever used as the fallback.
   ai:
+    retry:
+      # One attempt, no retries. The default is ten, and ten attempts with backoff
+      # against a provider that is out of quota for the day took 47 seconds to arrive
+      # at the 429 it returned immediately the first time -- all of it before
+      # ChatService could switch to the fallback, which then answered in one second.
+      #
+      # This application already has a better answer to a failing provider than trying
+      # it again: a different provider. Retrying is the wrong remedy for the failures
+      # that actually happen here (quota exhausted, model retired, key invalid), and it
+      # turns a fast failover into a timeout.
+      max-attempts: 1
     chat:
       client:
         # Two ChatModel beans make Spring AI's single auto-configured ChatClient.Builder
@@ -102,6 +113,12 @@ spring:
       chat:
         model: ${FALLBACK_LLM_MODEL}
         temperature: 0.2
+        # The fallback's equivalent of Gemini's thinking-budget. gpt-oss models reason
+        # before answering, and at the default effort a question over five retrieved
+        # chunks took ~40s end to end against ~1s for a bare prompt. There is nothing
+        # here worth reasoning about: the context has already been retrieved and the job
+        # is to summarise it. Ignored by providers and models that do not reason.
+        reasoning-effort: low
         max-tokens: 400
     vectorstore:
       pgvector:
@@ -188,10 +205,20 @@ app:
     # when the splitter produces unusually long chunks.
     max-context-chars: 8000
     # How long the primary model has to produce its first token before the request is
-    # handed to the fallback. Generous, because this is a cold call to a free tier: the
-    # visitor is already watching a "thinking" state, and a switch costs them the wait
-    # twice over, so it is worth waiting out a slow start.
-    first-token-timeout: 15s
+    # handed to the fallback.
+    #
+    # Set from measurement rather than caution. Observed first tokens: Gemini ~3s when it
+    # has quota, the OpenAI-compatible fallback ~1s. The number that matters is not how
+    # long a healthy primary takes but how much dead time a *broken* one costs, because
+    # this budget is spent in full on every request once the primary is failing -- and the
+    # Gemini free tier is 20 requests per day per model, so "failing" is a state this
+    # spends most of its day in.
+    #
+    # 8s still covers a primary three times slower than its normal worst case, and halves
+    # the penalty when it is simply out of quota. It also has to be a timeout rather than
+    # an error check: the Google SDK retries a 429 internally, so the error that arrives
+    # in under a second when called directly does not surface to this application quickly.
+    first-token-timeout: 8s
     # The rules the model answers under. A classpath resource rather than a string so it
     # can be read, diffed and reviewed like the rest of the content.
     system-prompt-resource: classpath:prompts/system.st
