@@ -100,10 +100,24 @@ spring:
             # the widths this model supports natively and is what `vector(768)` declares;
             # changing it means a new migration and a full re-ingestion.
             dimensions: 768
-            # Left at the default RETRIEVAL_DOCUMENT. One EmbeddingModel bean serves both
-            # ingestion and queries, so RETRIEVAL_QUERY cannot be set for questions alone
-            # without a second model; both sides being embedded the same way is what
-            # actually matters for cosine similarity.
+            # No task-type setting here, and setting one would be theatre: Spring AI 2.0.3
+            # reads `task-type`, defaults it to RETRIEVAL_DOCUMENT, merges it through its
+            # options -- and then never puts it in the request. The code says so:
+            # GoogleGenAiTextEmbeddingModel builds its EmbedContentConfig with only
+            # outputDimensionality, above a comment reading "as the new SDK might not have
+            # a direct taskType field".
+            #
+            # The cost is real. Gemini returns retrieval-tuned vectors for
+            # RETRIEVAL_QUERY/RETRIEVAL_DOCUMENT; with no task type it returns general
+            # ones, and question-to-document similarity compresses from roughly 0.65 to
+            # roughly 0.52 on this corpus. Ranking survives -- the right file still comes
+            # top -- so the practical effect is that app.chat.similarity-threshold has to
+            # be calibrated against that lower band, which it is.
+            #
+            # Fixing it properly means supplying a custom EmbeddingModel bean that calls
+            # embedContent with a task type, re-ingesting as RETRIEVAL_DOCUMENT and
+            # embedding questions as RETRIEVAL_QUERY. Worth revisiting on the 2.1 upgrade,
+            # in case the library starts sending it.
     openai:
       # The fallback provider. Any OpenAI-compatible endpoint works; Spring AI 2.0 is built
       # on the official OpenAI SDK, so this is the full base URL including the version
@@ -197,10 +211,33 @@ app:
     # Retrieval. topK is small on purpose: five chunks of this site is already more context
     # than a 150-word answer can use, and every extra chunk is tokens spent on the question.
     top-k: 5
-    # Cosine similarity below this is noise rather than a weak match. A question about
-    # something the site does not cover should retrieve nothing and get an honest
-    # "I don't know", which only happens if the floor is high enough to reject near-misses.
-    similarity-threshold: 0.6
+    # Cosine similarity below this is noise rather than a weak match: a question the site
+    # does not cover has to retrieve nothing, so the model has nothing to work from and
+    # says so.
+    #
+    # Measured, because the plausible-sounding 0.6 this started at broke the feature
+    # outright. Gemini embeddings arrive here without a task type (see the note under
+    # spring.ai.google.genai.embedding.text) and compress into a narrow band, and 0.6 sat
+    # above almost all of it -- so ordinary questions like "what are his qualifications"
+    # retrieved nothing and got an honest "I don't have that on the site" about content
+    # sitting in about.md. Top similarity per question, same corpus:
+    #
+    #   what is his qualifications     0.544   skills, resume, about    should answer
+    #   what school he blong to        0.521   about                    should answer
+    #   is Saq good with Kubernetes    0.611   skills                   should decline *
+    #   who won the 1998 World Cup?    0.429   nothing relevant         should decline
+    #
+    # * retrieving skills.md there is correct -- it is the right file to check, and it
+    #   does not mention Kubernetes, so that decline has to come from the model reading
+    #   the context rather than from the threshold hiding it. The threshold's only job is
+    #   the last row: 0.47 clears the 0.43 of a genuinely unrelated question while
+    #   passing the 0.50+ of a real one. Ranking was never the problem -- the right file
+    #   is top for the right question in every case above.
+    #
+    # Query-time only, so changing this needs no re-ingestion. Re-measure after editing
+    # the knowledge base, and watch both directions: the answerable and the unanswerable
+    # questions in chat-eval.md move in opposite directions.
+    similarity-threshold: 0.47
     # Hard ceiling on the <context> block, applied after topK. Protects the token budget
     # when the splitter produces unusually long chunks.
     max-context-chars: 8000
