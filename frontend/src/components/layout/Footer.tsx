@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { FooterShapes } from "@/components/layout/FooterShapes";
-import { PresenceChip } from "@/components/presence/PresenceChip";
+import { PresenceBadge } from "@/components/presence/PresenceBadge";
 import { StatusChip } from "@/components/status/StatusChip";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { siteConfig, type NavItem } from "@/lib/site-config";
@@ -104,11 +104,11 @@ export function Footer({ siteLinks }: FooterProps) {
         </nav>
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
-          {/* The status chip fetches its own state and renders nothing when no
-              project is monitored; presence waits for phase 09. */}
+          {/* Both chips report live state and render nothing when there is
+              none: no project monitored, or fewer than two people reading. */}
           <div className="flex flex-wrap gap-3">
             <StatusChip />
-            <PresenceChip wording="long" live={false} />
+            <PresenceBadge wording="long" live={false} />
             <ThemeToggle variant="chip" />
           </div>
           <span className="font-mono text-chip text-mute">

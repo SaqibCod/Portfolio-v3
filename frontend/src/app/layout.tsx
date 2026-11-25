@@ -4,6 +4,8 @@ import { ChatLauncher } from "@/components/chat/ChatLauncher";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { SkipLink } from "@/components/layout/SkipLink";
+import { LiveCursors } from "@/components/presence/LiveCursors";
+import { PresenceProvider } from "@/components/presence/PresenceProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { footerSiteNav, primaryNav } from "@/lib/navigation";
 import { siteConfig } from "@/lib/site-config";
@@ -77,6 +79,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col overflow-x-clip">
         <ThemeProvider>
+          {/* Presence wraps the tree because the header badge, the footer badge
+              and the cursor layer all read one socket, and because living in
+              the layout is what lets it survive navigation: a route change
+              sends a join on the open connection instead of reconnecting. */}
+          <PresenceProvider>
           <SkipLink />
           <Header nav={primaryNav(statusPublished)} />
           {/* tabIndex -1 makes the skip link move focus onto <main> itself
@@ -90,6 +97,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               chrome, not content, so it belongs last in the tab order and
               outside the landmark the skip link jumps to. */}
           <ChatLauncher />
+          {/* Last of all, and aria-hidden: other visitors' cursors are
+              ambient decoration that duplicates nothing on the page. */}
+          <LiveCursors />
+          </PresenceProvider>
         </ThemeProvider>
       </body>
     </html>
