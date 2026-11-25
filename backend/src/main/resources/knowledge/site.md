@@ -49,10 +49,15 @@ with strict rules: answer only from the context, say "I don't know" otherwise, n
 number. The answer streams back token by token over SSE, the cited pages follow as a
 `sources` event, and a final `done` event names which model answered.
 
-Gemini is the primary model. If it fails or does not produce a first token in time, the same
-prompt goes to a fallback model on an OpenAI-compatible endpoint, and `done.model` reports
-`fallback` so the degradation is visible rather than silent. If neither answers, the request
-is a 503 and nothing is streamed.
+Two different providers answer, in order. The primary is a model on an OpenAI-compatible
+endpoint — Groq, running `gpt-oss-120b` — chosen to lead because it reaches its first token in
+about a second and is not tightly rate limited. If it fails or produces no first token in time,
+the same prompt goes to Google's Gemini as the fallback, and the `done` event reports
+`fallback` so the degradation is visible rather than silent. If neither answers, the request is
+a 503 and nothing is streamed.
+
+Gemini also does all the embedding, whichever model answers the question: the knowledge base is
+indexed with its text-embedding model, so retrieval depends on it even when the chat does not.
 
 The assistant can be wrong, and it only knows what is published on this site. For anything
 else, the contact form reaches a real person.

@@ -4,7 +4,7 @@ Ten questions for the "Ask about me" assistant: five it should answer from the k
 five it should decline. This is a **manual** eval, run against real models, and it is the only
 thing in the repository that measures answer *quality*. Nothing in `./mvnw verify` touches it —
 the automated tests stub both models on purpose, and a stub can prove the plumbing but not that
-a threshold of 0.6 rejects the right paragraph.
+the similarity threshold rejects the right paragraph.
 
 ## Why this exists rather than an automated assertion
 
@@ -21,7 +21,8 @@ Run it after any change to: the knowledge files, `prompts/system.st`, `top-k`,
 ```bash
 docker compose up -d
 cd backend
-# Needs a real GEMINI_API_KEY; the fallback keys are only exercised by Q11 below.
+# Needs OPENAI_COMPAT_API_KEY (the primary, answers the questions) and GEMINI_API_KEY (embeds
+# the knowledge base, so retrieval needs it either way). Q11 exercises the tier switch.
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
@@ -59,11 +60,11 @@ token arrives quickly, which is half of what the endpoint is for.
 
 | # | Question | Expected source | Watch for |
 |---|----------|-----------------|-----------|
-| 1 | What has Saq built with Spring AI? | `/projects/medi-scan` | Should name Medi-Scan and its model fallback. Must **not** claim metrics — the case study's tiles are empty. |
+| 1 | What has Saq built with Spring AI? | `/projects/medi-scan` | Should name Medi-Scan and how it fails over between models. Must **not** claim metrics — the case study's tiles are empty. |
 | 2 | What is githMind and what problem does it solve? | `/projects/githmind` | The navigation-not-comprehension framing. Must not invent how chunking works; that is a `[CONFIRM]`. |
 | 3 | Where is Saq studying, and what is he open to? | `/#about` | MCA at IIT Patna; open to internships; Delhi, India. |
 | 4 | How does this site keep pages fast for search engines? | `/tech` | Static-first split; live widgets call `/api/v1` after paint. |
-| 5 | How does this chat decide what to put in front of the model? | `/tech` | Retrieval over pgvector, 768-dimension embeddings, similarity floor, Gemini then fallback. |
+| 5 | How does this chat decide what to put in front of the model? | `/tech` | Retrieval over pgvector, 768-dimension embeddings, a similarity floor, then the primary with Gemini behind it. |
 
 ### Not answerable
 
@@ -79,14 +80,14 @@ token arrives quickly, which is half of what the endpoint is for.
 
 | # | Check | How |
 |---|-------|-----|
-| 11 | Fallback actually answers | Set `GEMINI_API_KEY` to a syntactically valid but wrong key, keep `FALLBACK_LLM_*` real, ask Q1. Expect a normal answer and `done` with `{"model":"fallback"}`. |
+| 11 | Fallback actually answers | Set `OPENAI_COMPAT_API_KEY` to a syntactically valid but wrong key, keep `GEMINI_API_KEY` real, ask Q1. Expect a normal answer and `done` with `{"model":"fallback"}`. |
 | 12 | Both down is a 503 | Break both keys, ask Q1. Expect HTTP 503, `application/problem+json`, `type` ending `/problems/upstream-unavailable`, and no stream at all. |
-| 13 | Restart is free | Restart the backend twice with no content change. Expect `Knowledge ingestion done: 6 file(s) on the classpath, 0 embedded this run`. |
+| 13 | Restart is free | Restart the backend twice with no content change. Expect `Knowledge ingestion done: 7 file(s) on the classpath, 0 embedded this run`. |
 
 ## Results
 
 Run 24 Nov 2026 against a real `GEMINI_API_KEY` on the free tier, model `gemini-3.5-flash`,
-embeddings `gemini-embedding-001` at 768 dimensions. `FALLBACK_LLM_API_KEY` was still a
+embeddings `gemini-embedding-001` at 768 dimensions. `OPENAI_COMPAT_API_KEY` was still a
 placeholder, so every answer below came from the primary and the fallback could not be scored.
 
 **9 passed, 0 failed, 2 unrunnable.** Rows left blank are blank because they could not be run,
@@ -104,7 +105,7 @@ not because the result was unclear.
 | 8 | 24 Nov | primary | pass | Declined, even with the Skills chunk retrieved. Did not reason "backend engineer, therefore yes". |
 | 9 | 24 Nov | primary | pass | "I cannot write code or answer general programming questions." No sources, correctly. |
 | 10 | 24 Nov | primary | pass | Injection declined. Revealed nothing about the prompt, and did not describe the rules it was declining under. Empty sources. |
-| 11 | — | — | **not run** | Needs a real `FALLBACK_LLM_API_KEY`. |
+| 11 | — | — | **not run** | Needs a real `OPENAI_COMPAT_API_KEY`. |
 | 12 | 24 Nov | neither | pass | Observed for real rather than staged, via Q5: both models unavailable gave HTTP 503, `application/problem+json`, type `…/problems/upstream-unavailable`, and nothing streamed. |
 | 13 | 24 Nov | — | pass | Two consecutive starts logged `7 file(s) on the classpath, 0 embedded this run`. |
 
@@ -171,11 +172,11 @@ Four real defects, each found only by running it and none caught by the test sui
 - **Gemini's free tier is 20 generate-content requests per day, per model**, and the 429 names
   the figure along with how long until it resets (`Please retry in 7h16m`). That is the single
   most important number for this feature: roughly twenty questions a day, then nothing. For a
-  public site `FALLBACK_LLM_API_KEY` is therefore **required**, not a nice-to-have — without it
+  public site `OPENAI_COMPAT_API_KEY` is therefore **required**, not a nice-to-have — without it
   the chat answers 503 for the rest of the day, every day.
 - **Groq retires model names too.** `llama-3.3-70b-versatile` answers "the model does not exist
   or you do not have access to it". Check with
-  `curl -H "Authorization: Bearer $FALLBACK_LLM_API_KEY" https://api.groq.com/openai/v1/models`;
+  `curl -H "Authorization: Bearer $OPENAI_COMPAT_API_KEY" https://api.groq.com/openai/v1/models`;
   `openai/gpt-oss-120b` is the current default and streams its first token in about a second.
 - **Latency, measured**: a healthy Gemini is ~3s to its first token; the Groq fallback ~1s. With
   the primary out of quota a request costs `first-token-timeout` plus the fallback, which is why
@@ -186,10 +187,11 @@ Four real defects, each found only by running it and none caught by the test sui
   reach a 429 that arrives in under one second when called directly. This application's answer
   to a failing provider is a different provider, which is strictly better than asking the same
   one again.
-- **Worth considering: swap the tiers.** Groq is faster, has a far more generous free tier, and
-  answered every question correctly during this run. Gemini as primary means most of the day is
-  spent paying the failover penalty. That is an architectural decision rather than a fix, so it
-  is left as a question, not a change.
+- **The tiers were swapped on 25 Nov, after this run argued for it.** Groq is the primary and
+  Gemini the fallback. Everything above was recorded with Gemini leading, so the "model that
+  answered" column reads `primary` for Gemini and `fallback` for Groq; from 25 Nov onward
+  those names mean the opposite providers. The tier names themselves are fixed by the contract
+  and still describe order, not vendor.
 - **Answers name the contact path literally** ("the contact form at /#contact"). Accurate but
   raw; worth a prompt tweak to say "the contact form on this site" instead.
 
