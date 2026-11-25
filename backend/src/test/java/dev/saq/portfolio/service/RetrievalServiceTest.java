@@ -141,6 +141,61 @@ class RetrievalServiceTest {
 	}
 
 	@Test
+	void doesNotCiteAPageThatOnlySharesVocabulary() {
+		given(vectorStore.similaritySearch(any(SearchRequest.class))).willReturn(List.of(
+				scored("the page the answer came from", "/#about", "About", 0.52),
+				scored("same page, second chunk", "/#about", "About", 0.50),
+				// Above the retrieval threshold, so it is worth showing the model -- but it
+				// trails the best match, and citing it would mean telling a visitor asking
+				// about school to go and read a project case study.
+				scored("a project that shares the corpus's words", "/projects/githmind", "githMind", 0.47)));
+
+		RetrievedContext retrieved = service(8000).retrieve("what school did he go to");
+
+		// All three ground the answer; only the page it came from is offered as a source.
+		assertThat(retrieved.chunks()).hasSize(3);
+		assertThat(retrieved.sources()).extracting("url").containsExactly("/#about");
+	}
+
+	@Test
+	void capsTheNumberOfChipsItShows() {
+		given(vectorStore.similaritySearch(any(SearchRequest.class))).willReturn(List.of(
+				scored("a", "/a", "A", 0.60),
+				scored("b", "/b", "B", 0.60),
+				scored("c", "/c", "C", 0.60),
+				scored("d", "/d", "D", 0.60),
+				scored("e", "/e", "E", 0.60)));
+
+		// A fourth chip wraps to a second row in a 380px panel and pushes the answer out of
+		// view. Five equally-good sources also usually means the question was vague.
+		assertThat(service(8000).retrieve("q").sources()).hasSize(3);
+	}
+
+	@Test
+	void citesEveryCloseMatchUpToTheCap() {
+		given(vectorStore.similaritySearch(any(SearchRequest.class))).willReturn(List.of(
+				scored("best", "/a", "A", 0.520),
+				scored("almost as good", "/b", "B", 0.515)));
+
+		// Two pages genuinely supporting one answer is a real case -- a question about this
+		// site is answered from both the tech page and the portfolio case study.
+		assertThat(service(8000).retrieve("q").sources())
+				.extracting("url")
+				.containsExactly("/a", "/b");
+	}
+
+	@Test
+	void citesAChunkThatCarriesNoScore() {
+		// PgVectorStore always scores a result, but a VectorStore is an interface and nothing
+		// in the contract promises one. Dropping a real source over a missing number would be
+		// the wrong way to fail.
+		given(vectorStore.similaritySearch(any(SearchRequest.class)))
+				.willReturn(List.of(chunk("content", "/#about", "About")));
+
+		assertThat(service(8000).retrieve("q").sources()).hasSize(1);
+	}
+
+	@Test
 	void stopsAddingChunksOnceTheContextBudgetIsSpent() {
 		given(vectorStore.similaritySearch(any(SearchRequest.class))).willReturn(List.of(
 				chunk("x".repeat(60), "/a", "A"),
@@ -174,6 +229,15 @@ class RetrievalServiceTest {
 
 	private static Document chunk(String text, String url, String title) {
 		return new Document(text, Map.of("source", title + ".md", "title", title, "url", url));
+	}
+
+	/** A chunk with the similarity score {@code PgVectorStore} would have attached. */
+	private static Document scored(String text, String url, String title, double score) {
+		return Document.builder()
+				.text(text)
+				.metadata(Map.of("source", title + ".md", "title", title, "url", url))
+				.score(score)
+				.build();
 	}
 
 }

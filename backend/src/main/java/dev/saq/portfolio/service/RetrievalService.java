@@ -33,6 +33,25 @@ import org.springframework.stereotype.Service;
 @Service
 public class RetrievalService {
 
+	/**
+	 * Most chips to show under one answer.
+	 *
+	 * <p>Three because the panel is 380px wide and a fourth chip wraps to a second row that
+	 * pushes the answer out of view, and because an answer supported by more than three pages is
+	 * usually a sign the question was vague rather than that all five are worth reading.
+	 */
+	private static final int MAX_SOURCES = 3;
+
+	/**
+	 * How close to the best match a chunk has to score to be cited: within 4%.
+	 *
+	 * <p>Chosen from the measured spread rather than taste. For "what school he blong to" the
+	 * two about.md chunks scored 0.521 and 0.503 while the next page trailed at 0.47 — so a 4%
+	 * band keeps the page the answer actually came from and drops the one that merely shares the
+	 * corpus's vocabulary.
+	 */
+	private static final double CITATION_SCORE_RATIO = 0.96;
+
 	private static final Logger log = LoggerFactory.getLogger(RetrievalService.class);
 
 	private final VectorStore vectorStore;
@@ -98,7 +117,7 @@ public class RetrievalService {
 	}
 
 	/**
-	 * Citations, one per page rather than one per chunk.
+	 * Citations, one per page rather than one per chunk, and only the ones worth showing.
 	 *
 	 * <p>A long case study often contributes three chunks to the same answer, and showing the
 	 * same link three times reads as a bug. The first chunk of a page wins, so the snippet shown
@@ -107,17 +126,52 @@ public class RetrievalService {
 	 *
 	 * <p>Chunks whose knowledge file declared no url are skipped: they can ground an answer, but
 	 * there is no page to send the visitor to, and a chip that goes nowhere is worse than no chip.
+	 *
+	 * <p>Retrieval is deliberately broader than citation. Every chunk above the threshold is
+	 * worth putting in front of the model, because a weak match still supplies context; but a
+	 * citation is a claim that the answer came from that page, and "what school did he go to"
+	 * answered from about.md should not also offer the githMind case study. So the chips are
+	 * narrowed twice: to pages scoring close to the best match, and to a handful at most.
 	 */
 	private List<ChatSourceResponse> sources(List<Document> chunks) {
+		double best = chunks.stream()
+				.map(Document::getScore)
+				.filter(score -> score != null)
+				.mapToDouble(Double::doubleValue)
+				.max()
+				.orElse(0);
+
 		Map<String, ChatSourceResponse> byUrl = new LinkedHashMap<>();
 		for (Document chunk : chunks) {
 			String url = chatMapper.urlOf(chunk);
-			if (url.isBlank()) {
+			if (url.isBlank() || !isWorthCiting(chunk, best)) {
 				continue;
 			}
 			byUrl.putIfAbsent(url, chatMapper.toSource(chunk));
+			if (byUrl.size() == MAX_SOURCES) {
+				break;
+			}
 		}
 		return List.copyOf(byUrl.values());
+	}
+
+	/**
+	 * Whether a chunk is close enough to the best match to be named as a source.
+	 *
+	 * <p>Relative to the best score rather than an absolute floor, because the absolute numbers
+	 * move with the embedding model and the question's phrasing — the band for a well-aimed
+	 * question on this corpus is around 0.52, and for a vague one around 0.47, so no fixed value
+	 * separates "supporting" from "incidental" in both cases. The distance from the best match
+	 * does: a page genuinely about the question lands within a few percent of the top chunk,
+	 * while a page that merely shares vocabulary trails it.
+	 */
+	private static boolean isWorthCiting(Document chunk, double best) {
+		Double score = chunk.getScore();
+		if (score == null || best <= 0) {
+			// No score to judge by: cite it rather than silently dropping a real source.
+			return true;
+		}
+		return score >= best * CITATION_SCORE_RATIO;
 	}
 
 }
