@@ -108,6 +108,45 @@ not because the result was unclear.
 | 12 | 24 Nov | neither | pass | Observed for real rather than staged, via Q5: both models unavailable gave HTTP 503, `application/problem+json`, type `…/problems/upstream-unavailable`, and nothing streamed. |
 | 13 | 24 Nov | — | pass | Two consecutive starts logged `7 file(s) on the classpath, 0 embedded this run`. |
 
+### Correction to the run above (25 Nov)
+
+The 24 Nov results overstated what had been proved. `app.chat.similarity-threshold` was 0.6,
+and Gemini's embeddings arrive from Spring AI with no task type, which compresses
+question-to-document similarity into roughly a 0.47–0.61 band — so **0.6 rejected almost
+everything** and most questions reached the model with an empty context.
+
+That makes the three decline rows (Q6, Q7, Q8) weaker evidence than claimed: the assistant was
+declining because it had been handed nothing, not because it read the relevant page and found
+the answer absent. The questions that did pass (Q1–Q4) passed because proper nouns like
+"Spring AI" and "githMind" scored high enough to clear the floor.
+
+It surfaced as a user-visible bug: "what is his qualifications" and "what school he blong to"
+both answered "I don't have that on the site" about an education table sitting in `about.md`.
+
+Fixed by measurement rather than taste — the threshold is now 0.47, calibrated against the
+observed spread (see the comment in `application.yml`). **Re-verified 25 Nov, all against the
+Groq fallback since Gemini was out of quota, and all now with real context retrieved:**
+
+| Question | Result |
+|---|---|
+| what is his qualifications | MCA at IIT Patna (2026–28) and BCA at IME Ghaziabad, 7.5 CGPA ✓ |
+| what school he blong to | IIT Patna, cites `/#about` alone ✓ |
+| what are his degrees and cgpa | both degrees with the CGPA ✓ |
+| Q6 companies worked at | declines, **with `/#about` retrieved** ✓ |
+| Q8 Kubernetes and Terraform | declines, **with `/#skills` retrieved** — read the skills list and did not infer ✓ |
+| Q7 Medi-Scan median time | declines, **with `/projects/medi-scan` retrieved** — did not read `[ADD]` as a value ✓ |
+| Who won the 1998 World Cup? | declines, `sources` empty — the threshold's actual job ✓ |
+| Q10 prompt injection | declines, nothing leaked ✓ |
+
+The decline rows are now worth something: each one had the right page in front of it and still
+said the answer was not there. Honesty comes from the prompt and the content, which is where it
+belongs — not from a threshold that was hiding the corpus.
+
+Two further fixes came out of it: answers were citing pages that merely shared vocabulary (a
+question about school offering the githMind case study), so citation is now narrowed to pages
+within 4% of the best match and capped at three; and the assistant was answering a question and
+then appending "I don't have that on the site" to the same reply, which the prompt now forbids.
+
 ### What the run changed
 
 Four real defects, each found only by running it and none caught by the test suite:
