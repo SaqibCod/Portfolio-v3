@@ -48,12 +48,20 @@ class ChatIntegrationTests {
 	@LocalServerPort
 	private int port;
 
-	@Autowired
-	@Qualifier("googleGenAiChatModel")
-	private SwitchableChatModel primaryModel;
-
+	/**
+	 * The OpenAI-compatible provider, which {@code AiModelConfig} wires as the primary.
+	 *
+	 * <p>Qualified by the auto-configuration bean name rather than by a name of this test's own
+	 * choosing, so that swapping the tiers in {@code AiModelConfig} without updating these
+	 * fields would make the tests assert the opposite of what they claim.
+	 */
 	@Autowired
 	@Qualifier("openAiChatModel")
+	private SwitchableChatModel primaryModel;
+
+	/** Gemini, the fallback. */
+	@Autowired
+	@Qualifier("googleGenAiChatModel")
 	private SwitchableChatModel fallbackModel;
 
 	@Autowired

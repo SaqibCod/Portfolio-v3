@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * The two chat clients the assistant answers with: Gemini, and whatever
- * {@code FALLBACK_LLM_BASE_URL} points at.
+ * The two chat clients the assistant answers with: whatever
+ * {@code OPENAI_COMPAT_BASE_URL} points at, and Gemini behind it.
  *
  * <p>Getting two providers into one application is a matter of what is <em>not</em> configured.
  * {@code spring.ai.model.chat} selects a single provider, but both the google-genai and the
@@ -36,21 +36,33 @@ public class AiModelConfig {
 	public static final String FALLBACK_CHAT_CLIENT = "fallbackChatClient";
 
 	/**
-	 * Gemini.
+	 * The OpenAI-compatible endpoint — Groq, by default — which answers almost every question.
 	 *
-	 * @param chatModel injected by the bean name {@code GoogleGenAiChatAutoConfiguration} gives
-	 *                  it, not by type — there are two {@code ChatModel} beans, and which one is
-	 *                  primary is a decision this class exists to make rather than something to
-	 *                  leave to bean ordering
+	 * <p>It is first on measurement, not preference. Its first token arrives in about a second
+	 * against Gemini's three, and its free tier is not 20 requests per day: Gemini's is, which
+	 * meant that with the order reversed the feature spent most of its day timing out the
+	 * primary before the fallback answered anyway. Putting the reliable provider first makes
+	 * the common path the fast one and keeps the failover for genuine failures.
+	 *
+	 * @param chatModel injected by the bean name {@code OpenAiChatAutoConfiguration} gives it,
+	 *                  not by type — there are two {@code ChatModel} beans, and which one leads
+	 *                  is a decision this class exists to make rather than something to leave to
+	 *                  bean ordering
 	 */
 	@Bean(PRIMARY_CHAT_CLIENT)
-	ChatClient primaryChatClient(@Qualifier("googleGenAiChatModel") ChatModel chatModel) {
+	ChatClient primaryChatClient(@Qualifier("openAiChatModel") ChatModel chatModel) {
 		return ChatClient.builder(chatModel).build();
 	}
 
-	/** The OpenAI-compatible endpoint, used only when the primary produces no first token. */
+	/**
+	 * Gemini, used only when the primary produces no first token.
+	 *
+	 * <p>A second provider rather than a retry, and a different vendor on purpose: the failures
+	 * worth surviving are quota exhaustion and a retired model name, and asking the same company
+	 * again survives neither.
+	 */
 	@Bean(FALLBACK_CHAT_CLIENT)
-	ChatClient fallbackChatClient(@Qualifier("openAiChatModel") ChatModel chatModel) {
+	ChatClient fallbackChatClient(@Qualifier("googleGenAiChatModel") ChatModel chatModel) {
 		return ChatClient.builder(chatModel).build();
 	}
 

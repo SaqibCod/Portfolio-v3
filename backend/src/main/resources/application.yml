@@ -11,14 +11,23 @@ spring:
   flyway:
     enabled: true
 
-  # AI (phase 08). Gemini answers and embeds; the OpenAI starter is pointed at an
-  # OpenAI-compatible endpoint and only ever used as the fallback.
+  # AI (phase 08). An OpenAI-compatible endpoint (Groq by default) answers; Gemini is the
+  # fallback for chat and, regardless of tier, the only thing that embeds.
+  #
+  # The tiers were the other way round until the feature was measured against both. Gemini's
+  # free tier is 20 requests per day per model, so for most of any given day it answered 429
+  # and every question paid the first-token timeout before the fallback replied anyway. Groq
+  # is roughly three times faster to its first token and far less restricted, so it leads and
+  # Gemini covers it. Which provider sits in which tier lives in AiModelConfig; the SSE
+  # `done.model` values stay "primary" and "fallback", because they name the tier rather than
+  # the vendor and are published in the contract.
   ai:
     retry:
-      # One attempt, no retries. The default is ten, and ten attempts with backoff
-      # against a provider that is out of quota for the day took 47 seconds to arrive
-      # at the 429 it returned immediately the first time -- all of it before
-      # ChatService could switch to the fallback, which then answered in one second.
+      # One attempt, no retries. The default is ten, and ten attempts with backoff against
+      # a provider that is out of quota for the day took 47 seconds to arrive at the 429 it
+      # returned immediately the first time -- all of it before ChatService could switch
+      # tiers, which then answered in one second. Measured on Gemini while it led; it
+      # applies to whichever provider is in front.
       #
       # This application already has a better answer to a failing provider than trying
       # it again: a different provider. Retrying is the wrong remedy for the failures
@@ -37,9 +46,10 @@ spring:
       # activates both providers at once. Setting it to either name would silently disable
       # the other one and take the fallback away.
       #
-      # Everything else the OpenAI starter would auto-configure is switched off: only Gemini
-      # embeds (the migration pins vector_store to its 768 dimensions), and nothing on this
-      # site generates images, speech or moderation verdicts.
+      # Everything else the OpenAI starter would auto-configure is switched off: embedding is
+      # Gemini's job whichever tier it answers chat in (the migration pins vector_store to its
+      # 768 dimensions), and nothing on this site generates images, speech or moderation
+      # verdicts.
       embedding: none
       image: none
       moderation: none
@@ -119,19 +129,21 @@ spring:
             # embedding questions as RETRIEVAL_QUERY. Worth revisiting on the 2.1 upgrade,
             # in case the library starts sending it.
     openai:
-      # The fallback provider. Any OpenAI-compatible endpoint works; Spring AI 2.0 is built
-      # on the official OpenAI SDK, so this is the full base URL including the version
-      # segment (e.g. https://api.groq.com/openai/v1), not a host to append /v1 to.
-      base-url: ${FALLBACK_LLM_BASE_URL}
-      api-key: ${FALLBACK_LLM_API_KEY}
+      # The primary provider: Groq by default, but any OpenAI-compatible endpoint works,
+      # which is why these variables are named for the protocol rather than the vendor.
+      # Spring AI 2.0 is built on the official OpenAI SDK, so this is the full base URL
+      # including the version segment (e.g. https://api.groq.com/openai/v1), not a host to
+      # append /v1 to.
+      base-url: ${OPENAI_COMPAT_BASE_URL}
+      api-key: ${OPENAI_COMPAT_API_KEY}
       chat:
-        model: ${FALLBACK_LLM_MODEL}
+        model: ${OPENAI_COMPAT_MODEL}
         temperature: 0.2
-        # The fallback's equivalent of Gemini's thinking-budget. gpt-oss models reason
-        # before answering, and at the default effort a question over five retrieved
-        # chunks took ~40s end to end against ~1s for a bare prompt. There is nothing
-        # here worth reasoning about: the context has already been retrieved and the job
-        # is to summarise it. Ignored by providers and models that do not reason.
+        # The same fix as Gemini's thinking-budget, under a different name. gpt-oss models
+        # reason before answering, and at the default effort a question over five retrieved
+        # chunks took ~40s end to end against ~1s for a bare prompt. There is nothing here
+        # worth reasoning about: the context has already been retrieved and the job is to
+        # summarise it. Ignored by providers and models that do not reason.
         reasoning-effort: low
         max-tokens: 400
     vectorstore:
@@ -244,17 +256,16 @@ app:
     # How long the primary model has to produce its first token before the request is
     # handed to the fallback.
     #
-    # Set from measurement rather than caution. Observed first tokens: Gemini ~3s when it
-    # has quota, the OpenAI-compatible fallback ~1s. The number that matters is not how
-    # long a healthy primary takes but how much dead time a *broken* one costs, because
-    # this budget is spent in full on every request once the primary is failing -- and the
-    # Gemini free tier is 20 requests per day per model, so "failing" is a state this
-    # spends most of its day in.
+    # Set from measurement rather than caution. Observed first tokens: the Groq primary ~1s,
+    # the Gemini fallback ~3s when it has quota. The number that matters is not how long a
+    # healthy primary takes but how much dead time a *broken* one costs, because this budget
+    # is spent in full on every request while the primary is failing.
     #
-    # 8s still covers a primary three times slower than its normal worst case, and halves
-    # the penalty when it is simply out of quota. It also has to be a timeout rather than
-    # an error check: the Google SDK retries a 429 internally, so the error that arrives
-    # in under a second when called directly does not surface to this application quickly.
+    # 8s is many times the primary's normal worst case and is now rarely reached at all --
+    # it mattered far more when Gemini led and spent most of the day out of quota. It has to
+    # be a timeout rather than an error check either way: the Google SDK retries a 429
+    # internally, so an error that arrives in under a second when Gemini is called directly
+    # does not surface to this application quickly.
     first-token-timeout: 8s
     # The rules the model answers under. A classpath resource rather than a string so it
     # can be read, diffed and reviewed like the rest of the content.
