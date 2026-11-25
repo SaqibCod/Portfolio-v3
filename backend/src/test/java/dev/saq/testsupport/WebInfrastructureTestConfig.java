@@ -8,6 +8,7 @@ import dev.saq.portfolio.util.ClientIpUtils;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 /**
  * Supplies the cross-cutting beans an MVC slice needs to behave like the real application.
@@ -41,6 +42,22 @@ public class WebInfrastructureTestConfig {
 	@Bean
 	ClientIpUtils clientIpUtils(AppProperties properties) {
 		return new ClientIpUtils(properties);
+	}
+
+	/**
+	 * The executor {@code WebMvcConfig} hands to Spring MVC's async support.
+	 *
+	 * <p>Needed because an {@code @WebMvcTest} loads every {@code WebMvcConfigurer} but none of
+	 * the {@code @Configuration} classes they depend on, so without this the slice fails to start
+	 * with "No qualifying bean of type AsyncTaskExecutor" — a startup failure in every controller
+	 * test, caused by a change to one of them. Named to match {@code AsyncConfig}'s bean, since
+	 * that is the name {@code WebMvcConfig} qualifies on.
+	 */
+	@Bean(destroyMethod = "close")
+	SimpleAsyncTaskExecutor applicationAsyncExecutor() {
+		SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor("test-async-");
+		executor.setVirtualThreads(true);
+		return executor;
 	}
 
 }
