@@ -14,12 +14,24 @@ Saqib Choudhary is a first-year MCA (Master of Computer Applications) student at
 
 He is currently looking for tech internships in AI engineering, software engineering and software development.
 
-## Education
+## Education, qualifications and degrees
+
+Saqib's qualifications are an MCA (in progress) and a BCA (completed). His college and
+university education, in plain terms: he studies at IIT Patna now, and he did his bachelor's
+degree at IME Ghaziabad.
 
 | Degree | Institution | Duration | Result |
 |---|---|---|---|
 | MCA (Master of Computer Applications) | Indian Institute of Technology (IIT) Patna | 2026 – 2028 (pursuing) | In progress |
 | BCA (Bachelor of Computer Applications) | Institute of Management and Education (IME), Ghaziabad | Completed | 7.5 CGPA |
+
+- **Highest qualification:** MCA from IIT Patna, in progress (2026–2028).
+- **Graduate degree / master's:** MCA, Indian Institute of Technology Patna.
+- **Undergraduate degree / bachelor's:** BCA, Institute of Management and Education (IME),
+  Ghaziabad, completed with 7.5 CGPA.
+- **School / college / university he belongs to:** Indian Institute of Technology Patna
+  (IIT Patna) for the MCA; IME Ghaziabad for the BCA.
+- **Certifications:** none published on this site.
 
 ## Professional Interests
 
@@ -53,6 +65,12 @@ He is pursuing an MCA at the Indian Institute of Technology (IIT) Patna, in the 
 
 **What did Saqib study before his MCA?**
 He completed a BCA at the Institute of Management and Education (IME), Ghaziabad, graduating with a 7.5 CGPA.
+
+**What are Saqib's qualifications?**
+An MCA from IIT Patna, currently in progress (2026–2028), and a completed BCA from IME Ghaziabad with 7.5 CGPA.
+
+**Which school, college or university does Saqib belong to?**
+IIT Patna — the Indian Institute of Technology Patna — where he is doing his MCA. Before that, IME Ghaziabad for his BCA.
 
 **Is Saqib open to internships?**
 Yes. He is actively looking for internships in AI engineering, software engineering and development.
