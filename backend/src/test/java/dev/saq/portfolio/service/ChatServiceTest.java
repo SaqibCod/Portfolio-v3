@@ -161,6 +161,24 @@ class ChatServiceTest {
 	}
 
 	@Test
+	void givesUpOnAModelThatBlocksWhenSubscribedTo() {
+		StubChatModel fallback = StubChatModel.answering("Fallback.");
+
+		long started = System.nanoTime();
+		List<ServerSentEvent<Object>> events = events(StubChatModel.blockingOnSubscribe(), fallback);
+		Duration elapsed = Duration.ofNanos(System.nanoTime() - started);
+
+		// The timeout has to cover the subscribe, not just the wait after it. Spring AI's
+		// model adapters do their HTTP work and their retries synchronously on subscription,
+		// so a provider out of quota once spent 47 seconds there against a 15-second budget:
+		// `connect()` sat on the calling thread and `block(timeout)` only began counting
+		// afterwards. Generous bound -- what is asserted is "bounded at all", not the exact
+		// figure, which depends on scheduler hand-off.
+		assertThat(doneModel(events)).isEqualTo("fallback");
+		assertThat(elapsed).isLessThan(Duration.ofSeconds(5));
+	}
+
+	@Test
 	void sendsBothModelsTheSamePrompt() {
 		StubChatModel fallback = StubChatModel.answering("Fallback.");
 

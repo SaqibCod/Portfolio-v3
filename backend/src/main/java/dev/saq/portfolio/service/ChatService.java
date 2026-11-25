@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Answers one question as a stream of server-sent events, from whichever model answers first.
@@ -146,6 +147,13 @@ public class ChatService {
 					// token would otherwise count as an answer and commit the response to a model
 					// that has not said anything yet.
 					.filter(token -> !token.isEmpty())
+					// Subscription happens on another thread, which is what makes the timeout
+					// below mean anything. Spring AI's model adapters do their HTTP work -- and
+					// their retries -- synchronously when subscribed to, so with the subscribe on
+					// this thread `connect()` can sit for as long as the provider likes and
+					// `block(firstTokenTimeout)` only starts counting afterwards. A provider out
+					// of quota took 47 seconds that way against a 15-second budget.
+					.subscribeOn(Schedulers.boundedElastic())
 					.replay();
 			connection = tokens.connect();
 		}

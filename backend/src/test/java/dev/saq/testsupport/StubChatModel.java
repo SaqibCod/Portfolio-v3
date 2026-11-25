@@ -74,6 +74,19 @@ public final class StubChatModel implements ChatModel {
 		return new StubChatModel(List.of(tokens), Behaviour.FAIL_AFTER_TOKENS);
 	}
 
+	/**
+	 * Blocks the subscribing thread rather than returning a slow publisher.
+	 *
+	 * <p>Different from {@link #hanging()} in the one way that matters: a hanging publisher
+	 * subscribes instantly and then says nothing, which any timeout catches. This one does its
+	 * waiting <em>inside</em> {@code subscribe}, which is what Spring AI's model adapters
+	 * really do — their HTTP call and their retries run on whichever thread subscribed. A
+	 * first-token timeout that is applied after subscription does not bound this at all.
+	 */
+	public static StubChatModel blockingOnSubscribe() {
+		return new StubChatModel(List.of(), Behaviour.BLOCK_ON_SUBSCRIBE);
+	}
+
 	@Override
 	public ChatResponse call(Prompt prompt) {
 		this.lastPrompt = prompt;
@@ -96,6 +109,20 @@ public final class StubChatModel implements ChatModel {
 			case FAIL_AFTER_TOKENS -> Flux.fromIterable(tokens)
 					.map(StubChatModel::response)
 					.concatWith(Flux.error(new IllegalStateException("upstream closed the connection")));
+			// Flux.create runs its callback on the subscribing thread, so the sleep below
+			// happens during subscribe() -- the same place a provider's HTTP call and its
+			// retries happen. Long enough that a test finishing quickly proves the wait was
+			// bounded; interruptible so cancelling the attempt actually stops it.
+			case BLOCK_ON_SUBSCRIBE -> Flux.create(sink -> {
+				try {
+					Thread.sleep(Duration.ofMinutes(5));
+					sink.complete();
+				}
+				catch (InterruptedException ex) {
+					Thread.currentThread().interrupt();
+					sink.error(ex);
+				}
+			});
 		};
 	}
 
@@ -121,7 +148,7 @@ public final class StubChatModel implements ChatModel {
 
 	private enum Behaviour {
 
-		ANSWER, FAIL_IMMEDIATELY, COMPLETE_EMPTY, HANG, FAIL_AFTER_TOKENS
+		ANSWER, FAIL_IMMEDIATELY, COMPLETE_EMPTY, HANG, FAIL_AFTER_TOKENS, BLOCK_ON_SUBSCRIBE
 
 	}
 
