@@ -4,9 +4,12 @@ import { ChatLauncher } from "@/components/chat/ChatLauncher";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { SkipLink } from "@/components/layout/SkipLink";
+import { CommandLauncher } from "@/components/palette/CommandLauncher";
 import { PresenceProvider } from "@/components/presence/PresenceProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { commandPages, commandProjects } from "@/lib/commands/registry";
 import { footerSiteNav, primaryNav } from "@/lib/navigation";
+import { getAllProjects } from "@/lib/projects";
 import { siteConfig } from "@/lib/site-config";
 import { statusPageIsPublished } from "@/lib/status";
 
@@ -100,6 +103,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 chrome, not content, so it belongs last in the tab order and
                 outside the landmark the skip link jumps to. */}
             <ChatLauncher />
+            {/* The registry's data is built here because both halves of it are
+                server-only: `/status` is a page only while something is
+                monitored, and the project summaries come from compiled MDX
+                that must never be pulled into a browser chunk. */}
+            <CommandLauncher
+              data={{
+                pages: commandPages(statusPublished),
+                projects: commandProjects(getAllProjects()),
+              }}
+            />
           </PresenceProvider>
         </ThemeProvider>
       </body>

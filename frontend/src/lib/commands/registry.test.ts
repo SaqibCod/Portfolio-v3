@@ -186,8 +186,13 @@ describe("buildCommands", () => {
   it("gives every command a unique id and some search terms", () => {
     const commands = buildCommands(data, { theme: "dark", touch: false });
     const ids = commands.map((command) => command.id);
+    const titles = commands.map((command) => command.title);
 
     expect(new Set(ids).size).toBe(ids.length);
+    // Titles have to be unique too, and not only for the reader's sake: the
+    // palette hands each row's title to cmdk as its value, and two rows with
+    // one value collapse into a single selectable item.
+    expect(new Set(titles).size).toBe(titles.length);
     for (const command of commands) {
       expect(command.keywords.length).toBeGreaterThan(0);
       expect(command.title.length).toBeGreaterThan(0);

@@ -290,6 +290,14 @@
 
   --shadow-float: 0 30px 80px -20px rgb(0 0 0 / 0.55);
   --shadow-lift: 0 12px 30px -12px rgb(0 0 0 / 0.35);
+
+  /* The three overlay shadows from the palette export. The palette's second
+     layer is a violet hairline the box-shadow draws instead of a border, so
+     the ring reads at the same strength in both themes. */
+  --shadow-palette:
+    0 40px 100px -30px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(139 92 246 / 0.08);
+  --shadow-term: 0 40px 120px -30px rgb(0 0 0 / 0.7);
+  --shadow-toast: 0 20px 50px -16px rgb(0 0 0 / 0.5);
 }
 
 /* ---------------------------------------------------------------------------
