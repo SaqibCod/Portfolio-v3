@@ -9,15 +9,23 @@ import { requestOpenChat } from "@/components/chat/open-chat";
 // race the chunk. The panel is replaced with a marker so these tests are about
 // the launcher's own job: when the panel is mounted, and where focus goes.
 vi.mock("next/dynamic", () => ({
-  default: () => function MockChatPanel({ onClose }: { onClose: () => void }) {
-    return (
-      <div data-testid="chat-panel">
-        <button type="button" onClick={onClose}>
-          close from panel
-        </button>
-      </div>
-    );
-  },
+  default: () =>
+    function MockChatPanel({
+      onClose,
+      initialQuestion,
+    }: {
+      onClose: () => void;
+      initialQuestion?: string;
+    }) {
+      return (
+        <div data-testid="chat-panel">
+          <span data-testid="chat-question">{initialQuestion ?? ""}</span>
+          <button type="button" onClick={onClose}>
+            close from panel
+          </button>
+        </div>
+      );
+    },
 }));
 
 beforeEach(() => {
@@ -90,5 +98,29 @@ describe("ChatLauncher", () => {
     act(() => requestOpenChat());
 
     expect(screen.getByTestId("chat-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("chat-question")).toHaveTextContent("");
+  });
+
+  it("carries a question through to the panel", () => {
+    render(<ChatLauncher />);
+
+    // The palette's "Ask the AI about “…”" row, for a search that matched
+    // nothing. The question is handed over typed, never sent.
+    act(() => requestOpenChat("what is pgvector for"));
+
+    expect(screen.getByTestId("chat-question")).toHaveTextContent(
+      "what is pgvector for",
+    );
+  });
+
+  it("takes a later question while the panel is already open", () => {
+    render(<ChatLauncher />);
+
+    act(() => requestOpenChat("first question"));
+    act(() => requestOpenChat("second question"));
+
+    expect(screen.getByTestId("chat-question")).toHaveTextContent(
+      "second question",
+    );
   });
 });

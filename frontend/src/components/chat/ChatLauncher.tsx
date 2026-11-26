@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { OPEN_CHAT_EVENT } from "@/components/chat/open-chat";
+import { OPEN_CHAT_EVENT, type OpenChatEvent } from "@/components/chat/open-chat";
 
 /**
  * The panel, in its own chunk, fetched only when it is needed.
@@ -34,13 +34,21 @@ const ChatPanel = dynamic(
  * having to become a client component.
  */
 export function ChatLauncher() {
-  const [isOpen, setIsOpen] = useState(false);
+  // The question travels with the open state so one `setState` does both:
+  // opening with a question and opening without one are the same transition.
+  const [chat, setChat] = useState<{ isOpen: boolean; question?: string }>({
+    isOpen: false,
+  });
+  const isOpen = chat.isOpen;
   const launcherRef = useRef<HTMLButtonElement>(null);
 
-  const open = useCallback(() => setIsOpen(true), []);
+  const open = useCallback(
+    (question?: string) => setChat({ isOpen: true, question }),
+    [],
+  );
 
   const close = useCallback(() => {
-    setIsOpen(false);
+    setChat({ isOpen: false });
     // Focus goes back where it came from. Without this, closing the panel
     // drops focus to the top of the document and a keyboard visitor has to
     // tab through the whole page to get back.
@@ -67,13 +75,19 @@ export function ChatLauncher() {
   }, []);
 
   useEffect(() => {
-    window.addEventListener(OPEN_CHAT_EVENT, open);
-    return () => window.removeEventListener(OPEN_CHAT_EVENT, open);
+    const onRequest = (event: Event) => {
+      open((event as OpenChatEvent).detail?.question);
+    };
+
+    window.addEventListener(OPEN_CHAT_EVENT, onRequest);
+    return () => window.removeEventListener(OPEN_CHAT_EVENT, onRequest);
   }, [open]);
 
   return (
     <>
-      {isOpen ? <ChatPanel onClose={close} /> : null}
+      {isOpen ? (
+        <ChatPanel onClose={close} initialQuestion={chat.question} />
+      ) : null}
 
       <button
         ref={launcherRef}

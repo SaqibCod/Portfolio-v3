@@ -11,8 +11,22 @@
  */
 export const OPEN_CHAT_EVENT = "portfolio:open-chat";
 
-/** Asks the launcher to open the chat panel. No-op during server rendering. */
-export function requestOpenChat(): void {
+/** What the event carries: the question to start from, if the caller has one. */
+export type OpenChatDetail = { question?: string };
+
+export type OpenChatEvent = CustomEvent<OpenChatDetail>;
+
+/**
+ * Asks the launcher to open the chat panel. No-op during server rendering.
+ *
+ * The optional question is typed into the composer and left there — the palette
+ * offers "Ask the AI about “…”" for a search that matched nothing, and sending
+ * it unread would turn a mistyped search into a request. The visitor still
+ * presses Enter.
+ */
+export function requestOpenChat(question?: string): void {
   if (typeof window === "undefined") return;
-  window.dispatchEvent(new Event(OPEN_CHAT_EVENT));
+  window.dispatchEvent(
+    new CustomEvent<OpenChatDetail>(OPEN_CHAT_EVENT, { detail: { question } }),
+  );
 }

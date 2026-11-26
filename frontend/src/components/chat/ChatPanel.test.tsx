@@ -51,6 +51,18 @@ afterEach(() => {
 });
 
 describe("ChatPanel", () => {
+  it("starts from a question the palette handed over, without sending it", () => {
+    render(
+      <ChatPanel onClose={vi.fn()} initialQuestion="what is pgvector for" />,
+    );
+
+    expect(screen.getByRole("textbox", { name: /ask a question/i })).toHaveValue(
+      "what is pgvector for",
+    );
+    // A search that matched nothing must not become a request on its own.
+    expect(streamChat).not.toHaveBeenCalled();
+  });
+
   it("offers three openers before anything has been asked", () => {
     render(<ChatPanel onClose={vi.fn()} />);
 
