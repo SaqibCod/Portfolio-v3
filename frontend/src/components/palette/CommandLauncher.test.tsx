@@ -16,21 +16,39 @@ vi.mock("next-themes", () => ({
   useTheme: () => ({ resolvedTheme: "dark", setTheme: vi.fn() }),
 }));
 
-// The palette itself is replaced with a marker: these tests are about the
-// launcher's own job — when the overlay is mounted and what opens it — and the
-// palette's behaviour is covered against the real cmdk in its own file.
+// Both overlays are replaced with markers: these tests are about the
+// launcher's own job — which overlay is mounted and what opens it — and each
+// overlay's behaviour is covered against the real thing in its own file. The
+// factory is told apart by the import it was given, since `next/dynamic` is
+// called once per overlay.
 vi.mock("next/dynamic", () => ({
-  default: () =>
-    function MockPalette({ onClose }: { onClose: () => void }) {
+  default: (loader: () => Promise<unknown>) => {
+    const isTerminal = loader.toString().includes("TerminalOverlay");
+
+    return function MockOverlay({
+      onClose,
+      context,
+    }: {
+      onClose: () => void;
+      context: { openTerminal: () => void };
+    }) {
+      const name = isTerminal ? "terminal" : "palette";
+
       return (
-        <div data-testid="palette">
-          <input aria-label="palette field" />
+        <div data-testid={name}>
+          <input aria-label={`${name} field`} />
           <button type="button" onClick={onClose}>
-            close from palette
+            close from {name}
           </button>
+          {isTerminal ? null : (
+            <button type="button" onClick={() => context.openTerminal()}>
+              open terminal
+            </button>
+          )}
         </div>
       );
-    },
+    };
+  },
 }));
 
 const data: CommandData = { pages: commandPages(true), projects: [] };
@@ -116,6 +134,18 @@ describe("CommandLauncher", () => {
     act(() => requestOpenPalette());
     await user.click(screen.getByRole("button", { name: "close from palette" }));
 
+    expect(screen.queryByTestId("palette")).not.toBeInTheDocument();
+  });
+
+  it("hands over from the palette to the terminal, one at a time", async () => {
+    const user = userEvent.setup();
+    render(<CommandLauncher data={data} />);
+
+    act(() => requestOpenPalette());
+    await user.click(screen.getByRole("button", { name: "open terminal" }));
+
+    expect(screen.getByTestId("terminal")).toBeInTheDocument();
+    // Two overlays over each other would mean two focus traps fighting.
     expect(screen.queryByTestId("palette")).not.toBeInTheDocument();
   });
 

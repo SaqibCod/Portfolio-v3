@@ -31,6 +31,18 @@ const CommandPalette = dynamic(
   { ssr: false },
 );
 
+/**
+ * The terminal, in a chunk of its own — not even fetched alongside the
+ * palette, since most visitors who open the palette never ask for a prompt.
+ */
+const TerminalOverlay = dynamic(
+  () =>
+    import("@/components/terminal/TerminalOverlay").then(
+      (module) => module.TerminalOverlay,
+    ),
+  { ssr: false },
+);
+
 /** Which overlay is up. Only ever one, and most of the time none. */
 type Mode = "closed" | "palette" | "terminal";
 
@@ -180,6 +192,15 @@ export function CommandLauncher({ data }: CommandLauncherProps) {
           commands={commands}
           context={context}
           touch={touch}
+          onClose={close}
+        />
+      ) : null}
+
+      {mode === "terminal" ? (
+        <TerminalOverlay
+          commands={commands}
+          context={context}
+          data={data}
           onClose={close}
         />
       ) : null}
