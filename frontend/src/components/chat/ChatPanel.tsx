@@ -31,6 +31,15 @@ const DISCLAIMER = "Answers come from this site's content · up to 10 messages";
 type ChatPanelProps = {
   /** Closes the panel. Called by the header button and by Escape. */
   onClose: () => void;
+  /**
+   * A question to start the composer with, typed but not sent.
+   *
+   * The command palette offers "Ask the AI about “…”" when a search matches
+   * nothing. Sending that straight away would turn a mistyped search into a
+   * request, so the question is only put in the field — the visitor presses
+   * Enter, or edits it first.
+   */
+  initialQuestion?: string;
 };
 
 /**
@@ -43,9 +52,20 @@ type ChatPanelProps = {
  * cites, which is what lets this whole component load after the page has
  * painted without costing the site anything a crawler needs.
  */
-export function ChatPanel({ onClose }: ChatPanelProps) {
+export function ChatPanel({ onClose, initialQuestion }: ChatPanelProps) {
   const { turns, isStreaming, isThinking, error, ask, stop } = useChatStream();
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(initialQuestion ?? "");
+
+  // A question can also arrive while the panel is already open — the palette
+  // stays usable behind it, so `useState`'s initialiser is not the only path
+  // in. React's way to react to a changed prop is to adjust state during
+  // render and remember what was handled, rather than to write state from an
+  // effect; this re-renders once more and never paints the stale draft.
+  const [handledQuestion, setHandledQuestion] = useState(initialQuestion);
+  if (initialQuestion !== handledQuestion) {
+    setHandledQuestion(initialQuestion);
+    if (initialQuestion) setDraft(initialQuestion);
+  }
 
   const inputId = useId();
   const titleId = useId();
@@ -70,6 +90,16 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
       inputRef.current?.focus();
     }
   }, []);
+
+  // Focus follows a handed-over question, so Enter is the only thing left to
+  // press. Focus is a DOM effect rather than state, and it is skipped on small
+  // screens for the same reason the autofocus above is.
+  useEffect(() => {
+    if (!initialQuestion) return;
+    if (window.matchMedia("(min-width: 47.5rem)").matches) {
+      inputRef.current?.focus();
+    }
+  }, [initialQuestion]);
 
   // Follows the answer as it streams. `scrollTop` is written, never read during
   // render, so this costs no layout work on the token path.

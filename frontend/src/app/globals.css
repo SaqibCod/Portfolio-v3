@@ -36,6 +36,22 @@
   --code: #16161a;
   --err-text: #b91c1c;
 
+  /* Palette and terminal, from `.ov.light` in the palette export. The
+     overlays need a third surface (a hovered row), a selected-row wash, the
+     scrim behind a dialog, and a small palette of their own for terminal text
+     — a prompt, a path, an error and a success, none of which the rest of the
+     site has any use for. */
+  --bg3: #f0efe9;
+  --sel: rgb(124 58 237 / 0.1);
+  --scrim: rgb(244 243 239 / 0.6);
+  --tbg: #fbfaf6;
+  --tfg: #18181b;
+  --tdim: #6b6b72;
+  --tprompt: #6d28d9;
+  --tpath: #3f6212;
+  --terr: #b91c1c;
+  --tok: #15803d;
+
   /* Brushed-metal text fill used by display headings */
   --metal: linear-gradient(180deg, #52525b 0%, #0b0b0c 55%, #3f3f46 100%);
 }
@@ -60,6 +76,17 @@
   --code: #0e0e11;
   --err-text: #fca5a5;
 
+  --bg3: #1b1b20;
+  --sel: rgb(139 92 246 / 0.16);
+  --scrim: rgb(4 4 6 / 0.62);
+  --tbg: #0b0b0d;
+  --tfg: #e4e4e7;
+  --tdim: #8b8b94;
+  --tprompt: #c4b5fd;
+  --tpath: #a3e635;
+  --terr: #fca5a5;
+  --tok: #86efac;
+
   --metal: linear-gradient(180deg, #ffffff 0%, #d4d4d8 40%, #71717a 100%);
 }
 
@@ -82,6 +109,10 @@
   --heat-4: #a855f7;
 
   --grad: linear-gradient(90deg, #7c3aed, #c026d3);
+  /* The terminal's wordmark. A lighter pair than `--grad`, and defined once
+     for both themes, exactly as `.banner` is in the palette export — it is
+     `aria-hidden` decoration, not text anyone has to read. */
+  --grad-banner: linear-gradient(90deg, #a78bfa, #e879f9);
   --grad-shadow: 0 10px 30px -8px rgb(192 38 211 / 0.6);
   /* The taller lift the home export gives the chat launcher, which floats over
      the page rather than sitting in it. */
@@ -201,6 +232,17 @@
   --color-code: var(--code);
   --color-err-text: var(--err-text);
 
+  --color-bg3: var(--bg3);
+  --color-sel: var(--sel);
+  --color-scrim: var(--scrim);
+  --color-tbg: var(--tbg);
+  --color-tfg: var(--tfg);
+  --color-tdim: var(--tdim);
+  --color-tprompt: var(--tprompt);
+  --color-tpath: var(--tpath);
+  --color-terr: var(--terr);
+  --color-tok: var(--tok);
+
   --color-ac1: var(--ac1);
   --color-ac2: var(--ac2);
   --color-ok: var(--ok);
@@ -226,12 +268,14 @@
   --breakpoint-md: 47.5rem;
 
   /* Radii, straight from the exports. */
+  --radius-kbd: 6px;
   --radius-xs: 8px;
   --radius-sm: 10px;
   --radius-md: 12px;
   --radius-input: 14px;
   --radius-bubble: 16px;
   --radius-lg: 20px;
+  --radius-palette: 22px;
   --radius-card: 24px;
   --radius-xl: 28px;
   --radius-2xl: 32px;
@@ -250,6 +294,14 @@
 
   --shadow-float: 0 30px 80px -20px rgb(0 0 0 / 0.55);
   --shadow-lift: 0 12px 30px -12px rgb(0 0 0 / 0.35);
+
+  /* The three overlay shadows from the palette export. The palette's second
+     layer is a violet hairline the box-shadow draws instead of a border, so
+     the ring reads at the same strength in both themes. */
+  --shadow-palette:
+    0 40px 100px -30px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(139 92 246 / 0.08);
+  --shadow-term: 0 40px 120px -30px rgb(0 0 0 / 0.7);
+  --shadow-toast: 0 20px 50px -16px rgb(0 0 0 / 0.5);
 }
 
 /* ---------------------------------------------------------------------------
@@ -377,6 +429,14 @@
   text-transform: uppercase;
   letter-spacing: -0.02em;
   line-height: 0.9;
+}
+
+/* The brand gradient as a text fill, for the terminal's banner. */
+@utility grad-text {
+  background: var(--grad-banner);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 /* Brushed-metal fill for display headings. */

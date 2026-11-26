@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NavLinks } from "@/components/layout/NavLinks";
+import { PaletteHint } from "@/components/palette/PaletteHint";
 import { PresenceBadge } from "@/components/presence/PresenceBadge";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/Button";
@@ -89,6 +90,9 @@ export function Header({ nav }: HeaderProps) {
           <NavLinks items={nav} className="hidden md:flex" />
 
           <div className="flex items-center gap-3">
+            {/* The palette export puts its two triggers first in this group,
+                ahead of the theme toggle. */}
+            <PaletteHint />
             {/* `.presence` is hidden below the breakpoint in the exports.
                 Renders nothing until the socket reports at least two viewers. */}
             <PresenceBadge className="hidden md:inline-flex" />

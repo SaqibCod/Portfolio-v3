@@ -20,7 +20,13 @@ type AskAiButtonProps = {
  */
 export function AskAiButton({ className }: AskAiButtonProps) {
   return (
-    <Button variant="primary" onClick={requestOpenChat} className={className}>
+    <Button
+      variant="primary"
+      // Wrapped rather than passed directly: `requestOpenChat` takes an
+      // optional question, and React would hand it the click event.
+      onClick={() => requestOpenChat()}
+      className={className}
+    >
       Ask the AI about me
     </Button>
   );

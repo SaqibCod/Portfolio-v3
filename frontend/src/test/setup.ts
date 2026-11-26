@@ -17,6 +17,21 @@ if (!window.matchMedia) {
   }));
 }
 
+// cmdk measures its list with a ResizeObserver and keeps the highlighted row
+// in view with scrollIntoView. jsdom implements neither, and without them the
+// palette throws on mount rather than failing an assertion.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn();
+}
+
 afterEach(() => {
   cleanup();
 });
