@@ -219,6 +219,25 @@ app:
     #     health-path: /actuator/health
     services: []
 
+  presence:
+    # Ceilings for /ws/presence (phase 09), not features: ordinary traffic on a portfolio should
+    # never reach any of them. They exist so that a script pointed at the endpoint costs a
+    # bounded amount of memory and bandwidth instead of an unbounded one.
+    #
+    # Held per instance and in memory only. Presence is true while a socket is open and
+    # meaningless afterwards, so none of it is persisted and none of it survives a restart --
+    # visitors reconnect, so the counts heal in seconds. Running more than one backend instance
+    # would need a shared registry (Redis pub/sub for joins, leaves and cursors, with only the
+    # local sessions held here); phase 09 is deliberately single-instance.
+    max-sessions: 500
+    # A client beats every 25s, so this is well over two missed beats. It has to stay comfortably
+    # above that interval or the sweeper disconnects healthy visitors between heartbeats.
+    stale-after: 60s
+    # The same throttle the contract documents for clients, so a well-behaved one never reaches
+    # it. Messages past the budget are dropped rather than answered: the remedy for a dropped
+    # cursor is the next one, a few milliseconds later.
+    cursor-rate-per-second: 20
+
   chat:
     # Retrieval. topK is small on purpose: five chunks of this site is already more context
     # than a 150-word answer can use, and every extra chunk is tokens spent on the question.
