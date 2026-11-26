@@ -35,7 +35,10 @@ export function Toast({ message, onExpire }: ToastProps) {
       className="pointer-events-none fixed bottom-7 left-1/2 z-50 -translate-x-1/2"
     >
       {message ? (
-        <div className="flex items-center gap-2.5 rounded-full bg-fg px-4.5 py-3 text-[14px] font-semibold whitespace-nowrap text-bg shadow-toast">
+        // `max-w` and `truncate` rather than the export's bare `nowrap`: a
+        // clipboard failure puts the address itself in the message, and that
+        // can be longer than a phone is wide.
+        <div className="flex max-w-[min(90vw,26rem)] items-center gap-2.5 rounded-full bg-fg px-4.5 py-3 text-[14px] font-semibold text-bg shadow-toast">
           <span
             aria-hidden="true"
             className="flex size-5 shrink-0 items-center justify-center rounded-full bg-ok text-white"
@@ -53,7 +56,7 @@ export function Toast({ message, onExpire }: ToastProps) {
               <path d="M5 12l5 5 9-10" />
             </svg>
           </span>
-          {message}
+          <span className="min-w-0 truncate">{message}</span>
         </div>
       ) : null}
     </div>

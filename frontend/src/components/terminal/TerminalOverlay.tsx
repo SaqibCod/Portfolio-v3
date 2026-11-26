@@ -106,6 +106,10 @@ export function TerminalOverlay({
             role="log"
             aria-live="polite"
             aria-label="Terminal output"
+            // Command names, slugs and routes are identifiers, not prose. An
+            // auto-translating browser that turns `ls` into a verb leaves the
+            // visitor reading output for a terminal that does not exist.
+            translate="no"
             className="flex-1 overflow-y-auto overscroll-contain px-6.5 pt-5.5 pb-2 text-[15px] leading-[1.7]"
           >
             <p
@@ -139,7 +143,7 @@ export function TerminalOverlay({
           </div>
 
           <div className="flex shrink-0 items-center gap-2.5 px-6.5 pt-2.5 pb-5.5 text-[15px]">
-            <label htmlFor={inputId} className="shrink-0">
+            <label htmlFor={inputId} translate="no" className="shrink-0">
               <span className="text-tprompt">{TERMINAL_USER}</span>:
               <span className="text-tpath">~{cwd}</span>$
             </label>

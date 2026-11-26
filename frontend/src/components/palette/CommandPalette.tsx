@@ -142,9 +142,9 @@ function SparkleIcon() {
  * the same specificity would leave which one wins up to stylesheet order.
  */
 const ITEM_CLASS =
-  "group flex min-h-14 w-full cursor-pointer items-center gap-3.5 " +
-  "rounded-md border-0 bg-transparent px-3 text-left text-fg select-none " +
-  "data-[selected=true]:bg-sel md:min-h-13";
+  "group flex min-h-14 w-full cursor-pointer touch-manipulation items-center " +
+  "gap-3.5 rounded-md border-0 bg-transparent px-3 text-left text-fg " +
+  "select-none data-[selected=true]:bg-sel md:min-h-13";
 
 /** `.ico`. Picks up the accent from the row's selected state. */
 const ICON_CLASS =
@@ -209,10 +209,10 @@ export function CommandPalette({
       contentClassName={
         "fixed bottom-0 left-0 z-40 flex max-h-[82vh] w-full flex-col " +
         "overflow-hidden rounded-t-card border border-b-0 border-line " +
-        "bg-bg2 shadow-palette " +
+        "bg-bg2 pb-[env(safe-area-inset-bottom)] shadow-palette " +
         "md:top-[14vh] md:bottom-auto md:left-1/2 md:max-h-[70vh] " +
         "md:w-[min(640px,calc(100%-2rem))] md:-translate-x-1/2 " +
-        "md:rounded-palette md:border-b"
+        "md:rounded-palette md:border-b md:pb-0"
       }
       className="flex min-h-0 flex-1 flex-col"
     >

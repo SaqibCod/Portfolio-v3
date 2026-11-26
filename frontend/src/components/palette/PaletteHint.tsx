@@ -39,7 +39,8 @@ function isApplePlatform(): boolean {
 function useShortcutLabel(): string {
   return useSyncExternalStore(
     noopSubscribe,
-    () => (isApplePlatform() ? "⌘K" : "Ctrl K"),
+    // A non-breaking space, so the cap never wraps between Ctrl and K.
+    () => (isApplePlatform() ? "⌘K" : "Ctrl K"),
     () => "⌘K",
   );
 }
