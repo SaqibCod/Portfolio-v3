@@ -43,8 +43,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
 	 *
 	 * <p>This is a browser protection and nothing more: {@code Origin} is a header, and any
 	 * non-browser client can send whatever it likes. The real limits on abuse are the frame size
-	 * in {@link dev.saq.portfolio.websocket.PresenceWebSocketHandler}, the session ceiling and
-	 * the cursor budget in {@link PresenceProperties} -- none of which trust the origin.
+	 * in {@link dev.saq.portfolio.websocket.PresenceWebSocketHandler} and the session ceiling in
+	 * {@link PresenceProperties} -- neither of which trusts the origin.
 	 */
 	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {

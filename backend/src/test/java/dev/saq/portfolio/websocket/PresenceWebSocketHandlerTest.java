@@ -2,7 +2,6 @@ package dev.saq.portfolio.websocket;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -23,7 +22,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * Parsing and delegation, which is everything this layer does. What the service makes of a page
- * or a coordinate is {@code PresenceServiceTest}'s business.
+ * is {@code PresenceServiceTest}'s business.
  */
 class PresenceWebSocketHandlerTest {
 
@@ -88,18 +87,13 @@ class PresenceWebSocketHandlerTest {
 	}
 
 	@Test
-	void readsACursor() {
+	void ignoresACursorMessageAndKeepsTheConnectionOpen() throws Exception {
+		// Live cursors were dropped, so "cursor" is now just another unknown type. A client
+		// still sending them — an old tab, or a stale deploy — must not be disconnected for it.
 		handle("{\"type\":\"cursor\",\"x\":0.42,\"y\":0.18}");
 
-		verify(presenceService).cursor(SESSION_ID, 0.42d, 0.18d);
-	}
-
-	@Test
-	void passesAbsentCoordinatesThroughAsAbsent() {
-		// Not as zero, which would be a cursor in the top-left corner that nobody sent.
-		handle("{\"type\":\"cursor\"}");
-
-		verify(presenceService).cursor(SESSION_ID, null, null);
+		verifyNoInteractions(presenceService);
+		verify(session, never()).close(any());
 	}
 
 	@Test
@@ -160,14 +154,13 @@ class PresenceWebSocketHandlerTest {
 
 	@Test
 	void neverWritesToASocketItself() throws Exception {
-		handle("{\"type\":\"cursor\",\"x\":0.5,\"y\":0.5}");
 		handle("{\"type\":\"join\",\"page\":\"/\"}");
 		handle("{\"type\":\"ping\"}");
 
-		// Sending belongs to the service, which is the only thing holding the registry a relay
-		// needs. The handler parses and delegates, and nothing more.
+		// Sending belongs to the service, which is the only thing holding the registry a
+		// broadcast needs. The handler parses and delegates, and nothing more.
 		verify(session, never()).sendMessage(any());
-		verify(presenceService).cursor(anyString(), any(), any());
+		verify(presenceService).join(SESSION_ID, "/");
 	}
 
 	/** Runs one frame through the handler, failing the test if it throws. */

@@ -12,11 +12,12 @@ import org.springframework.web.socket.WebSocketSession;
  * afterwards, so persisting it would only ever produce rows describing visitors who have
  * already left.
  *
- * <p>{@code id} is the public, random, per-connection identifier the contract puts in a cursor
- * broadcast ({@code anon-7f3a}). It is deliberately not the transport session id, which the
- * registry keys on: that one is assigned by the servlet container and is never sent to a client.
+ * <p>{@code id} is a random per-connection label ({@code anon-7f3a}) used only in logs, so one
+ * connection's joins, leaves and failed sends can be followed without recording anything about
+ * who it belongs to. It left the wire with live cursors, which was the one thing that published
+ * it; nothing is sent to a client now but the counts.
  *
- * @param id       the anonymous id other visitors see, carrying no identity
+ * @param id       the anonymous log label, carrying no identity
  * @param page     the path this connection is viewing, or {@code null} between the handshake and
  *                 the first {@code join}
  * @param lastSeen when the last message arrived; the stale sweeper reads this

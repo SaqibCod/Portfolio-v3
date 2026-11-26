@@ -1,5 +1,4 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
-import { useEffect } from "react";
 import {
   afterEach,
   beforeEach,
@@ -11,10 +10,7 @@ import {
 } from "vitest";
 
 import { PresenceProvider } from "@/components/presence/PresenceProvider";
-import {
-  usePresence,
-  usePresenceCursors,
-} from "@/components/presence/usePresence";
+import { usePresence } from "@/components/presence/usePresence";
 import { PING_INTERVAL_MS } from "@/lib/presence";
 
 const pathname = vi.hoisted(() => ({ current: "/projects/githmind" }));
@@ -456,81 +452,6 @@ describe("presence provider and hooks", () => {
     show();
 
     expect(FakeWebSocket.instances).toHaveLength(count + 1);
-  });
-
-  // --- cursors ------------------------------------------------------------
-
-  it("sends a cursor as the contract spells it", () => {
-    function CursorSender() {
-      const { sendCursor } = usePresenceCursors();
-      return (
-        <button type="button" onClick={() => sendCursor(0.42, 0.18)}>
-          move
-        </button>
-      );
-    }
-    renderProvider(<CursorSender />);
-    const socket = connect();
-
-    act(() => screen.getByRole("button").click());
-
-    expect(socket.messages()).toContainEqual({
-      type: "cursor",
-      x: 0.42,
-      y: 0.18,
-    });
-  });
-
-  it("delivers other visitors' cursors to subscribers, not to state", () => {
-    const seen: unknown[] = [];
-    // Counted in an effect with no dependency list, which runs after every
-    // render. Incrementing during render would be a render-phase mutation.
-    const renders: true[] = [];
-
-    function CursorWatcher() {
-      const { subscribeToCursors } = usePresenceCursors();
-      useEffect(() => {
-        renders.push(true);
-      });
-      useEffect(
-        () => subscribeToCursors((cursor) => seen.push(cursor)),
-        [subscribeToCursors],
-      );
-      return <p data-testid="readout">watching</p>;
-    }
-
-    renderProvider(<CursorWatcher />);
-    const socket = connect();
-    const rendersBefore = renders.length;
-
-    act(() => {
-      socket.receive({ type: "cursor", id: "anon-7f3a", x: 0.1, y: 0.2 });
-      socket.receive({ type: "cursor", id: "anon-7f3a", x: 0.3, y: 0.4 });
-    });
-
-    expect(seen).toEqual([
-      { type: "cursor", id: "anon-7f3a", x: 0.1, y: 0.2 },
-      { type: "cursor", id: "anon-7f3a", x: 0.3, y: 0.4 },
-    ]);
-    // Twenty cursor messages a second per visitor must not re-render the site.
-    expect(renders).toHaveLength(rendersBefore);
-  });
-
-  it("drops a cursor send while the socket is not open", () => {
-    function CursorSender() {
-      const { sendCursor } = usePresenceCursors();
-      return (
-        <button type="button" onClick={() => sendCursor(0.5, 0.5)}>
-          move
-        </button>
-      );
-    }
-    renderProvider(<CursorSender />);
-
-    // Never opened: the caller should not have to check first.
-    act(() => screen.getByRole("button").click());
-
-    expect(FakeWebSocket.instances).toHaveLength(0);
   });
 });
 

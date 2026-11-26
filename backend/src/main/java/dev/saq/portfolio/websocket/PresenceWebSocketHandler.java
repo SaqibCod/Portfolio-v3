@@ -3,7 +3,6 @@ package dev.saq.portfolio.websocket;
 import java.io.IOException;
 
 import dev.saq.portfolio.dto.websocket.InboundMessage;
-import dev.saq.portfolio.dto.websocket.InboundMessage.CursorMessage;
 import dev.saq.portfolio.dto.websocket.InboundMessage.JoinMessage;
 import dev.saq.portfolio.dto.websocket.InboundMessage.PingMessage;
 import dev.saq.portfolio.service.PresenceService;
@@ -22,16 +21,17 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * The controller layer for {@code /ws/presence}: it parses a frame into an
- * {@link InboundMessage} and hands it to {@link PresenceService}. No rule about what a page or a
- * coordinate may be lives here, the same way a REST controller holds no rules about what a
- * guestbook entry may say.
+ * {@link InboundMessage} and hands it to {@link PresenceService}. No rule about what a page may
+ * be lives here, the same way a REST controller holds no rules about what a guestbook entry may
+ * say.
  *
  * <p>Every session is wrapped in a {@link ConcurrentWebSocketSessionDecorator} before anything
- * else sees it. A visitor can be written to by several threads at once -- a presence broadcast on
- * a scheduler thread while a cursor relay runs on another visitor's request thread -- and the
- * underlying JSR-356 session forbids concurrent sends, so without the wrapper those two writes
- * can interleave into one corrupt frame. Wrapping here rather than in the service is what makes
- * that guarantee unconditional: the service never holds a raw session to get it wrong with.
+ * else sees it. A visitor can be written to by several threads at once -- a coalesced broadcast
+ * firing on a scheduler thread while another visitor's {@code join} is broadcast from its own
+ * request thread -- and the underlying JSR-356 session forbids concurrent sends, so without the
+ * wrapper those two writes can interleave into one corrupt frame. Wrapping here rather than in
+ * the service is what makes that guarantee unconditional: the service never holds a raw session
+ * to get it wrong with.
  *
  * <p>Nothing is ever reported back to a client. A WebSocket has no equivalent of a 400, and this
  * endpoint carries no information a visitor needs, so a message that cannot be understood is
@@ -108,8 +108,6 @@ public class PresenceWebSocketHandler extends TextWebSocketHandler {
 		switch (inbound) {
 			case JoinMessage join -> this.presenceService.join(sessionId, join.page());
 			case PingMessage _ -> this.presenceService.ping(sessionId);
-			case CursorMessage cursor ->
-					this.presenceService.cursor(sessionId, cursor.x(), cursor.y());
 		}
 	}
 

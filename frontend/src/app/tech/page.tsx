@@ -141,13 +141,12 @@ const features = [
     kicker: "WebSocket",
     title: "Who’s here",
     endpoint: "wss://…/ws/presence",
-    summary:
-      "The live visitor counts and optional cursors you see around the site.",
+    summary: "The live visitor counts you see around the site.",
     points: [
       "The browser sends join on load and on every route change.",
       "A heartbeat ping every 25 seconds keeps the connection alive.",
-      "Live cursors are optional and throttled to 20 messages per second.",
-      "Ids are random per connection, never tied to who you are.",
+      "Counts are coalesced to at most one update per page per second.",
+      "Nothing identifying is sent: no account, no cookie, no address.",
     ],
   },
   {
