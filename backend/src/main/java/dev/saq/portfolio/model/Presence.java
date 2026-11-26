@@ -12,27 +12,27 @@ import org.springframework.web.socket.WebSocketSession;
  * afterwards, so persisting it would only ever produce rows describing visitors who have
  * already left.
  *
- * <p>{@code id} is a random per-connection label ({@code anon-7f3a}) used only in logs, so one
- * connection's joins, leaves and failed sends can be followed without recording anything about
- * who it belongs to. It left the wire with live cursors, which was the one thing that published
- * it; nothing is sent to a client now but the counts.
+ * <p>There is no identifier here beyond the container's own session, which the registry keys on
+ * and which never leaves the server. A connection carried a random {@code anon-xxxx} label while
+ * live cursors existed, because a receiving client had to tell two cursors apart; with cursors
+ * gone nothing published it and nothing read it, so it was removed rather than left to look like
+ * state something depends on.
  *
- * @param id       the anonymous log label, carrying no identity
  * @param page     the path this connection is viewing, or {@code null} between the handshake and
  *                 the first {@code join}
  * @param lastSeen when the last message arrived; the stale sweeper reads this
  * @param session  the sink to write to, already wrapped for concurrent sends by the handler
  */
-public record Presence(String id, String page, Instant lastSeen, WebSocketSession session) {
+public record Presence(String page, Instant lastSeen, WebSocketSession session) {
 
 	/** The same connection, now viewing {@code page}. */
 	public Presence onPage(String page, Instant at) {
-		return new Presence(this.id, page, at, this.session);
+		return new Presence(page, at, this.session);
 	}
 
 	/** The same connection, heard from at {@code at}. */
 	public Presence seenAt(Instant at) {
-		return new Presence(this.id, this.page, at, this.session);
+		return new Presence(this.page, at, this.session);
 	}
 
 	/** True once a {@code join} has arrived, which is what makes this connection countable. */

@@ -1,7 +1,6 @@
 package dev.saq.portfolio.service;
 
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -33,8 +32,9 @@ import tools.jackson.databind.ObjectMapper;
  * publishing joins and leaves over Redis pub/sub and keeping only the local sessions here --
  * which phase 09 deliberately leaves out of scope.
  *
- * <p>Nothing identifying is stored. A connection is a container-assigned session id, a random
- * public id, a path and a timestamp; there is no address, no hash of one, and no cookie.
+ * <p>Nothing identifying is stored. A connection is a container-assigned session id, a path and
+ * a timestamp; there is no address, no hash of one, and no cookie. Nothing identifying is sent
+ * either: the counts are the whole protocol, and they name no one.
  */
 @Service
 public class PresenceService {
@@ -49,16 +49,6 @@ public class PresenceService {
 	 */
 	private static final Pattern PAGE_PATTERN = Pattern.compile("^/[a-z0-9/_-]{0,100}$");
 
-	/** {@code anon-} plus four hex characters. */
-	private static final int ID_SPACE = 1 << 16;
-
-	/**
-	 * Four hex digits is 65,536 ids, so among a few hundred live connections a collision is
-	 * likely rather than rare. Regenerating on a clash costs nothing; the bound just stops the
-	 * loop if the registry is somehow almost full of ids.
-	 */
-	private static final int ID_ATTEMPTS = 64;
-
 	private final PresenceProperties properties;
 
 	private final PresenceBroadcastService broadcastService;
@@ -66,8 +56,6 @@ public class PresenceService {
 	private final ObjectMapper objectMapper;
 
 	private final Clock clock;
-
-	private final SecureRandom random = new SecureRandom();
 
 	/** Keyed by the container's session id, which is never sent to a client. */
 	private final ConcurrentHashMap<String, Presence> sessions = new ConcurrentHashMap<>();
@@ -105,7 +93,7 @@ public class PresenceService {
 			log.warn("Refusing presence connection: {} sessions already open", this.sessions.size());
 			return false;
 		}
-		this.sessions.put(session.getId(), new Presence(nextId(), null, this.clock.instant(), session));
+		this.sessions.put(session.getId(), new Presence(null, this.clock.instant(), session));
 		return true;
 	}
 
@@ -236,27 +224,6 @@ public class PresenceService {
 				.toList();
 	}
 
-	/** {@code anon-} plus four hex digits, retried until it is not already in use. */
-	private String nextId() {
-		for (int attempt = 0; attempt < ID_ATTEMPTS; attempt++) {
-			String candidate = randomId();
-			if (!isIdInUse(candidate)) {
-				return candidate;
-			}
-		}
-		// Every attempt collided, which needs tens of thousands of live connections. The id is
-		// only a label in the log, so a duplicate is far cheaper than refusing the connection.
-		return randomId();
-	}
-
-	private String randomId() {
-		return "anon-%04x".formatted(this.random.nextInt(ID_SPACE));
-	}
-
-	private boolean isIdInUse(String candidate) {
-		return this.sessions.values().stream().anyMatch(presence -> presence.id().equals(candidate));
-	}
-
 	private String serialize(Object message) {
 		try {
 			return this.objectMapper.writeValueAsString(message);
@@ -279,7 +246,8 @@ public class PresenceService {
 		catch (IOException | RuntimeException ex) {
 			// A failed send means the socket is going or gone. The sweeper and the container's
 			// close callback both clean up after it; there is nothing to tell the visitor.
-			log.debug("Could not send to presence session {}: {}", recipient.id(), ex.getMessage());
+			log.debug("Could not send to a presence session on {}: {}",
+					recipient.page(), ex.getMessage());
 		}
 	}
 
