@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   HIDDEN_DISCONNECT_MS,
@@ -9,12 +9,11 @@ import {
   parseInboundMessage,
   presenceUrl,
   reconnectDelayMs,
-  type CursorBroadcastMessage,
   type OutboundMessage,
   type PresenceMessage,
 } from "@/lib/presence";
 
-import { PresenceContext, type CursorListener } from "./usePresence";
+import { PresenceContext } from "./usePresence";
 
 /**
  * Waits for the browser to be idle, falling back to a short timeout where
@@ -42,7 +41,7 @@ function whenIdle(run: () => void): () => void {
  * Nothing here is allowed to be visible when it goes wrong. The backend being
  * down, a socket failing to open, a proxy killing an idle connection — all of
  * them end in the same place, a `connected: false` that hides the badge and
- * the cursors, and a reconnect attempt on a jittered backoff. There is no error
+ * the badge, and a reconnect attempt on a jittered backoff. There is no error
  * state to render because there is nothing a visitor could do about it and
  * nothing they are missing: every number this provides exists only to decorate
  * content that is already in the HTML.
@@ -62,8 +61,6 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
    */
   const [counts, setCounts] = useState<PresenceMessage | null>(null);
 
-  const socketRef = useRef<WebSocket | null>(null);
-  const cursorListenersRef = useRef<Set<CursorListener>>(new Set());
   /**
    * The page to announce. Read by the socket when it opens, which can happen
    * after several navigations, so it has to be the current value rather than
@@ -72,20 +69,6 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
   const pageRef = useRef(pathname);
   /** Set by the lifecycle effect so the navigation effect can send a join. */
   const joinRef = useRef<((page: string) => void) | null>(null);
-
-  const sendCursor = useCallback((x: number, y: number) => {
-    const socket = socketRef.current;
-    if (socket?.readyState !== WebSocket.OPEN) return;
-    socket.send(JSON.stringify({ type: "cursor", x, y } satisfies OutboundMessage));
-  }, []);
-
-  const subscribeToCursors = useCallback((listener: CursorListener) => {
-    const listeners = cursorListenersRef.current;
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  }, []);
 
   // One effect owns the whole connection lifecycle. Splitting it across several
   // would mean the reconnect timer, the heartbeat and the hidden-tab timer each
@@ -146,7 +129,6 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       socket = opening;
-      socketRef.current = opening;
 
       opening.addEventListener("open", () => {
         if (disposed) return;
@@ -157,23 +139,19 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       });
 
       opening.addEventListener("message", (event: MessageEvent) => {
+        // Counts are the only thing the server sends; anything else a future
+        // release adds is discarded here rather than throwing.
         const message = parseInboundMessage(event.data);
         if (!message) return;
 
-        if (message.type === "presence") {
-          // Stored whichever page it is about; render decides whether it is
-          // about the page being looked at now.
-          setCounts(message);
-          return;
-        }
-
-        notifyCursorListeners(message);
+        // Stored whichever page it is about; render decides whether it is
+        // about the page being looked at now.
+        setCounts(message);
       });
 
       opening.addEventListener("close", () => {
         stopPing();
         socket = null;
-        socketRef.current = null;
         if (disposed) return;
         // The counts were only true while the socket was open.
         setConnected(false);
@@ -186,12 +164,6 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       opening.addEventListener("error", () => {});
     }
 
-    const notifyCursorListeners = (cursor: CursorBroadcastMessage) => {
-      for (const listener of cursorListenersRef.current) {
-        listener(cursor);
-      }
-    };
-
     const disconnect = () => {
       closedDeliberately = true;
       stopPing();
@@ -199,7 +171,6 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       reconnectTimer = undefined;
       socket?.close();
       socket = null;
-      socketRef.current = null;
       setConnected(false);
       setCounts(null);
     };
@@ -239,7 +210,6 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       stopPing();
       socket?.close();
       socket = null;
-      socketRef.current = null;
     };
   }, []);
 
@@ -258,10 +228,8 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       pageCount: current?.pageCount ?? 0,
       siteCount: current?.siteCount ?? 0,
       connected,
-      sendCursor,
-      subscribeToCursors,
     }),
-    [current, connected, sendCursor, subscribeToCursors],
+    [current, connected],
   );
 
   return (

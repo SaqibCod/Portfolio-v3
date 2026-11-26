@@ -74,24 +74,15 @@ describe("parseInboundMessage", () => {
     });
   });
 
-  it("reads a cursor message", () => {
-    const message = parseInboundMessage(
-      '{"type":"cursor","id":"anon-7f3a","x":0.42,"y":0.18}',
-    );
-
-    expect(message).toEqual({
-      type: "cursor",
-      id: "anon-7f3a",
-      x: 0.42,
-      y: 0.18,
-    });
-  });
-
   it("rejects a message type it has never heard of", () => {
-    // A deployed tab can outlive the release that added a message, and
-    // throwing on one would take presence down for everyone who had not
-    // reloaded.
+    // A deployed tab can outlive the release that added or removed a message,
+    // and throwing on one would take presence down for everyone who had not
+    // reloaded. `cursor` is the case that actually happens: a backend still on
+    // the release before live cursors were dropped would send them.
     expect(parseInboundMessage('{"type":"sparkle","hue":3}')).toBeNull();
+    expect(
+      parseInboundMessage('{"type":"cursor","id":"anon-7f3a","x":0.4,"y":0.1}'),
+    ).toBeNull();
   });
 
   it("rejects a known type with a field missing or of the wrong kind", () => {
@@ -102,10 +93,6 @@ describe("parseInboundMessage", () => {
       parseInboundMessage(
         '{"type":"presence","page":"/","pageCount":"3","siteCount":4}',
       ),
-    ).toBeNull();
-    expect(parseInboundMessage('{"type":"cursor","x":0.1,"y":0.2}')).toBeNull();
-    expect(
-      parseInboundMessage('{"type":"cursor","id":"anon-1","x":"0.1","y":0.2}'),
     ).toBeNull();
   });
 

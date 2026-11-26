@@ -5,11 +5,11 @@ import { PresenceBadge } from "@/components/presence/PresenceBadge";
 import {
   PresenceContext,
   presenceFallback,
-  type PresenceContextValue,
+  type PresenceState,
 } from "@/components/presence/usePresence";
 
 /** Renders the badge against a fixed presence state. */
-function renderWith(state: Partial<PresenceContextValue>) {
+function renderWith(state: Partial<PresenceState>) {
   return render(
     <PresenceContext.Provider value={{ ...presenceFallback, ...state }}>
       <PresenceBadge />

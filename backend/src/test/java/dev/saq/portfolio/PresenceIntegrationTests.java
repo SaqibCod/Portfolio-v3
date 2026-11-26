@@ -159,96 +159,6 @@ class PresenceIntegrationTests {
 		assertThat(lurker.received()).isEmpty();
 	}
 
-	// --- cursors -----------------------------------------------------------------------------
-
-	@Test
-	void relaysACursorToTheOtherVisitorOnThePage() throws Exception {
-		PresenceTestClient sender = connect();
-		PresenceTestClient peer = connect();
-		sender.join(PAGE);
-		peer.join(PAGE);
-		peer.awaitPresenceWithCount(PAGE, 2);
-		peer.clear();
-
-		sender.send("{\"type\":\"cursor\",\"x\":0.42,\"y\":0.18}");
-
-		JsonNode cursor = peer.awaitCursor();
-		assertThat(cursor.get("type").asString()).isEqualTo("cursor");
-		assertThat(cursor.get("x").asDouble()).isEqualTo(0.42d);
-		assertThat(cursor.get("y").asDouble()).isEqualTo(0.18d);
-		// An id that is random per connection, and carries no identity.
-		assertThat(cursor.get("id").asString()).matches("anon-[0-9a-f]{4}");
-	}
-
-	@Test
-	void doesNotRelayACursorToAVisitorOnAnotherPage() throws Exception {
-		PresenceTestClient sender = connect();
-		PresenceTestClient elsewhere = connect();
-		sender.join(PAGE);
-		elsewhere.join(OTHER_PAGE);
-		elsewhere.awaitPresence(OTHER_PAGE);
-		elsewhere.clear();
-
-		sender.send("{\"type\":\"cursor\",\"x\":0.5,\"y\":0.5}");
-
-		// Nothing arrives. Proven by giving it time to and then checking, which is the only way
-		// to assert on an absence.
-		assertThat(elsewhere.awaitAnyMessage(Duration.ofMillis(750))).isNull();
-	}
-
-	@Test
-	void doesNotEchoACursorBackToItsSender() throws Exception {
-		PresenceTestClient sender = connect();
-		PresenceTestClient peer = connect();
-		sender.join(PAGE);
-		peer.join(PAGE);
-		sender.awaitPresenceWithCount(PAGE, 2);
-		sender.clear();
-
-		sender.send("{\"type\":\"cursor\",\"x\":0.5,\"y\":0.5}");
-		peer.awaitCursor();
-
-		assertThat(sender.received()).noneMatch(message -> message.contains("\"type\":\"cursor\""));
-	}
-
-	@Test
-	void dropsCursorsPastTwentyPerSecond() throws Exception {
-		PresenceTestClient sender = connect();
-		PresenceTestClient peer = connect();
-		sender.join(PAGE);
-		peer.join(PAGE);
-		peer.awaitPresenceWithCount(PAGE, 2);
-		peer.clear();
-
-		for (int i = 0; i < 60; i++) {
-			sender.send("{\"type\":\"cursor\",\"x\":0.5,\"y\":0.5}");
-		}
-		// Long enough for all sixty to have been handled, and short enough that the budget has
-		// not refilled more than twice.
-		Thread.sleep(300);
-
-		long relayed = peer.received().stream()
-				.filter(message -> message.contains("\"type\":\"cursor\""))
-				.count();
-		assertThat(relayed).isPositive().isLessThan(60);
-	}
-
-	@Test
-	void ignoresACursorOutsideTheUnitSquare() throws Exception {
-		PresenceTestClient sender = connect();
-		PresenceTestClient peer = connect();
-		sender.join(PAGE);
-		peer.join(PAGE);
-		peer.awaitPresenceWithCount(PAGE, 2);
-		peer.clear();
-
-		sender.send("{\"type\":\"cursor\",\"x\":1.4,\"y\":0.2}");
-		sender.send("{\"type\":\"cursor\",\"x\":-0.2,\"y\":0.2}");
-		sender.send("{\"type\":\"cursor\"}");
-
-		assertThat(peer.awaitAnyMessage(Duration.ofMillis(750))).isNull();
-	}
-
 	// --- bad input ----------------------------------------------------------------------------
 
 	@Test
@@ -263,6 +173,27 @@ class PresenceIntegrationTests {
 
 		assertThat(visitor.awaitPresence(PAGE).get("pageCount").asInt()).isEqualTo(1);
 		assertThat(visitor.isOpen()).isTrue();
+	}
+
+	@Test
+	void ignoresACursorMessageAndKeepsTheSocketOpen() throws Exception {
+		// Live cursors were dropped after this phase shipped, so "cursor" is now an unknown type
+		// like any other. It gets its own test because it is the one unknown type a real client
+		// is known to have sent: a tab left open across the deploy keeps sending them, and
+		// closing its socket would cost that visitor the count as well.
+		PresenceTestClient visitor = connect();
+		visitor.join(PAGE);
+		visitor.awaitPresence(PAGE);
+		visitor.clear();
+
+		visitor.send("{\"type\":\"cursor\",\"x\":0.42,\"y\":0.18}");
+
+		// Nothing is relayed back, to this visitor or anyone else...
+		assertThat(visitor.awaitAnyMessage(Duration.ofMillis(750))).isNull();
+		// ...and the connection is still open and still counting.
+		assertThat(visitor.isOpen()).isTrue();
+		visitor.join(OTHER_PAGE);
+		assertThat(visitor.awaitPresence(OTHER_PAGE).get("pageCount").asInt()).isEqualTo(1);
 	}
 
 	@Test
@@ -297,7 +228,7 @@ class PresenceIntegrationTests {
 	@Test
 	void refusesTheHandshakeFromAnOriginTheSiteDoesNotUse() {
 		// A browser protection: Origin is a header any other client can forge, which is why the
-		// real limits are the message size, the session ceiling and the cursor budget.
+		// real limits are the message size and the session ceiling.
 		assertThatThrownBy(() -> openSession(new PresenceTestClient(), "https://evil.example.com"))
 				.isInstanceOf(ExecutionException.class);
 	}
@@ -393,10 +324,6 @@ class PresenceIntegrationTests {
 			return awaitMatching(message -> message.has("pageCount")
 					&& page.equals(message.get("page").asString())
 					&& message.get("pageCount").asInt() == pageCount);
-		}
-
-		JsonNode awaitCursor() throws Exception {
-			return awaitMatching(message -> "cursor".equals(message.path("type").asString()));
 		}
 
 		/** The next frame of any kind, or {@code null} if none arrives in {@code within}. */

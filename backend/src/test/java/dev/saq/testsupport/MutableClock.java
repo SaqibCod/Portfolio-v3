@@ -8,10 +8,10 @@ import java.time.ZoneId;
 /**
  * A clock a test can wind forward.
  *
- * <p>Presence is full of one-second windows -- the broadcast gate, the cursor budget -- and the
- * only two ways to test a window are to sleep through it or to move the clock. Sleeping would
- * add real seconds to every run and still be a race on a slow machine, so these tests move the
- * clock instead and stay deterministic.
+ * <p>Presence is built on windows -- the one-second broadcast gate, the sixty-second staleness
+ * cutoff -- and the only two ways to test a window are to sleep through it or to move the clock.
+ * Sleeping would add real seconds to every run and still be a race on a slow machine, so these
+ * tests move the clock instead and stay deterministic.
  */
 public final class MutableClock extends Clock {
 

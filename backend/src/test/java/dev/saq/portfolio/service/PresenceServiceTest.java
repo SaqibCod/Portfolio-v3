@@ -1,8 +1,6 @@
 package dev.saq.portfolio.service;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -59,12 +57,12 @@ class PresenceServiceTest {
 			return null;
 		}).when(broadcastService).requestBroadcast(anyString(), any(Runnable.class));
 
-		this.service = newService(500, Duration.ofSeconds(60), 20);
+		this.service = newService(500, Duration.ofSeconds(60));
 	}
 
-	private PresenceService newService(int maxSessions, Duration staleAfter, int cursorRate) {
+	private PresenceService newService(int maxSessions, Duration staleAfter) {
 		return new PresenceService(
-				new PresenceProperties(maxSessions, staleAfter, cursorRate),
+				new PresenceProperties(maxSessions, staleAfter),
 				this.broadcastService, new ObjectMapper(), this.clock);
 	}
 
@@ -83,7 +81,7 @@ class PresenceServiceTest {
 
 	@Test
 	void refusesAConnectionPastTheSessionCeiling() {
-		PresenceService limited = newService(2, Duration.ofSeconds(60), 20);
+		PresenceService limited = newService(2, Duration.ofSeconds(60));
 
 		assertThat(limited.register(new RecordingSession("s1"))).isTrue();
 		assertThat(limited.register(new RecordingSession("s2"))).isTrue();
@@ -92,7 +90,7 @@ class PresenceServiceTest {
 
 	@Test
 	void freesTheSlotADepartedConnectionHeld() {
-		PresenceService limited = newService(1, Duration.ofSeconds(60), 20);
+		PresenceService limited = newService(1, Duration.ofSeconds(60));
 		RecordingSession first = new RecordingSession("s1");
 		limited.register(first);
 
@@ -100,29 +98,6 @@ class PresenceServiceTest {
 		limited.unregister(first.getId());
 
 		assertThat(limited.register(new RecordingSession("s3"))).isTrue();
-	}
-
-	@Test
-	void givesEveryConnectionTheContractsAnonymousIdShape() {
-		List<RecordingSession> sessions = new ArrayList<>();
-		for (int i = 0; i < 25; i++) {
-			RecordingSession session = new RecordingSession("s" + i);
-			sessions.add(session);
-			service.register(session);
-			service.join(session.getId(), PAGE);
-		}
-
-		// Read the ids off the cursor relay, which is the only place they are published. The
-		// joins above have already sent presence counts, so clear first to be sure of what is read.
-		sessions.forEach(RecordingSession::clear);
-		service.cursor(sessions.getFirst().getId(), 0.5d, 0.5d);
-
-		// Twenty-five ids out of 65,536, so this also stands in for the collision retry: every
-		// peer receives exactly one relay, and no two connections are sharing an id.
-		assertThat(sessions.subList(1, sessions.size()))
-				.allSatisfy(peer -> assertThat(peer.sent())
-						.singleElement(as(STRING))
-						.containsPattern("\"id\":\"anon-[0-9a-f]{4}\""));
 	}
 
 	// --- joining ----------------------------------------------------------------------------
@@ -237,144 +212,6 @@ class PresenceServiceTest {
 		service.unregister(leaver.getId());
 
 		assertThat(stayer.sent()).hasSize(1);
-	}
-
-	// --- cursors ----------------------------------------------------------------------------
-
-	@Test
-	void relaysACursorToTheOtherViewersOfThePage() {
-		RecordingSession sender = join("s1", PAGE);
-		RecordingSession peer = join("s2", PAGE);
-		peer.clear();
-
-		service.cursor(sender.getId(), 0.42d, 0.18d);
-
-		assertThat(peer.sent()).hasSize(1);
-		assertThat(peer.sent().getFirst())
-				.contains("\"type\":\"cursor\"")
-				.contains("\"x\":0.42")
-				.contains("\"y\":0.18");
-	}
-
-	@Test
-	void neverEchoesACursorBackToItsSender() {
-		RecordingSession sender = join("s1", PAGE);
-		join("s2", PAGE);
-		sender.clear();
-
-		service.cursor(sender.getId(), 0.5d, 0.5d);
-
-		assertThat(sender.sent()).isEmpty();
-	}
-
-	@Test
-	void doesNotRelayACursorAcrossPages() {
-		RecordingSession sender = join("s1", PAGE);
-		RecordingSession elsewhere = join("s2", OTHER_PAGE);
-		elsewhere.clear();
-
-		service.cursor(sender.getId(), 0.5d, 0.5d);
-
-		assertThat(elsewhere.sent()).isEmpty();
-	}
-
-	@Test
-	void dropsCoordinatesOutsideTheUnitSquare() {
-		RecordingSession sender = join("s1", PAGE);
-		RecordingSession peer = join("s2", PAGE);
-		peer.clear();
-
-		service.cursor(sender.getId(), -0.01d, 0.5d);
-		service.cursor(sender.getId(), 1.01d, 0.5d);
-		service.cursor(sender.getId(), 0.5d, Double.NaN);
-		service.cursor(sender.getId(), 0.5d, Double.POSITIVE_INFINITY);
-		// Absent rather than wrong: a missing x must not become a cursor at the left edge.
-		service.cursor(sender.getId(), null, 0.5d);
-		service.cursor(sender.getId(), 0.5d, null);
-
-		assertThat(peer.sent()).isEmpty();
-	}
-
-	@Test
-	void keepsTheEdgesOfTheUnitSquare() {
-		RecordingSession sender = join("s1", PAGE);
-		RecordingSession peer = join("s2", PAGE);
-		peer.clear();
-
-		service.cursor(sender.getId(), 0.0d, 0.0d);
-		service.cursor(sender.getId(), 1.0d, 1.0d);
-
-		assertThat(peer.sent()).hasSize(2);
-	}
-
-	@Test
-	void ignoresACursorFromAConnectionThatHasNotJoined() {
-		RecordingSession peer = join("s1", PAGE);
-		RecordingSession silent = new RecordingSession("s2");
-		service.register(silent);
-		peer.clear();
-
-		service.cursor(silent.getId(), 0.5d, 0.5d);
-
-		assertThat(peer.sent()).isEmpty();
-	}
-
-	@Test
-	void dropsCursorsPastTheBudgetForThatSecond() {
-		PresenceService limited = newService(500, Duration.ofSeconds(60), 3);
-		RecordingSession sender = new RecordingSession("s1");
-		RecordingSession peer = new RecordingSession("s2");
-		limited.register(sender);
-		limited.register(peer);
-		limited.join(sender.getId(), PAGE);
-		limited.join(peer.getId(), PAGE);
-		peer.clear();
-
-		for (int i = 0; i < 10; i++) {
-			limited.cursor(sender.getId(), 0.5d, 0.5d);
-		}
-
-		assertThat(peer.sent()).hasSize(3);
-	}
-
-	@Test
-	void refillsTheCursorBudgetEachSecond() {
-		PresenceService limited = newService(500, Duration.ofSeconds(60), 2);
-		RecordingSession sender = new RecordingSession("s1");
-		RecordingSession peer = new RecordingSession("s2");
-		limited.register(sender);
-		limited.register(peer);
-		limited.join(sender.getId(), PAGE);
-		limited.join(peer.getId(), PAGE);
-		peer.clear();
-
-		limited.cursor(sender.getId(), 0.5d, 0.5d);
-		limited.cursor(sender.getId(), 0.5d, 0.5d);
-		limited.cursor(sender.getId(), 0.5d, 0.5d);
-		clock.advance(Duration.ofSeconds(1));
-		limited.cursor(sender.getId(), 0.5d, 0.5d);
-
-		assertThat(peer.sent()).hasSize(3);
-	}
-
-	@Test
-	void budgetsEachConnectionSeparately() {
-		PresenceService limited = newService(500, Duration.ofSeconds(60), 1);
-		RecordingSession first = new RecordingSession("s1");
-		RecordingSession second = new RecordingSession("s2");
-		RecordingSession peer = new RecordingSession("s3");
-		for (RecordingSession session : List.of(first, second, peer)) {
-			limited.register(session);
-			limited.join(session.getId(), PAGE);
-		}
-		peer.clear();
-
-		// One busy visitor must not spend anyone else's budget.
-		limited.cursor(first.getId(), 0.1d, 0.1d);
-		limited.cursor(first.getId(), 0.2d, 0.2d);
-		limited.cursor(second.getId(), 0.3d, 0.3d);
-
-		assertThat(peer.sent()).hasSize(2);
 	}
 
 	// --- the stale sweep ----------------------------------------------------------------------

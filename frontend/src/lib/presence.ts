@@ -17,10 +17,7 @@ export type JoinMessage = { type: "join"; page: string };
 /** Client -> server, every 25 seconds. */
 export type PingMessage = { type: "ping" };
 
-/** Client -> server, normalised to the viewport. */
-export type CursorMessage = { type: "cursor"; x: number; y: number };
-
-export type OutboundMessage = JoinMessage | PingMessage | CursorMessage;
+export type OutboundMessage = JoinMessage | PingMessage;
 
 /** Server -> client, whenever a page's counts change. */
 export type PresenceMessage = {
@@ -30,15 +27,8 @@ export type PresenceMessage = {
   siteCount: number;
 };
 
-/** Server -> client, one other visitor's cursor. */
-export type CursorBroadcastMessage = {
-  type: "cursor";
-  id: string;
-  x: number;
-  y: number;
-};
-
-export type InboundMessage = PresenceMessage | CursorBroadcastMessage;
+/** The only thing the server sends. */
+export type InboundMessage = PresenceMessage;
 
 /**
  * The presence endpoint, derived from the API base URL rather than configured
@@ -56,7 +46,9 @@ export function presenceUrl(apiBaseUrl: string = env.apiBaseUrl): string {
  * The server is ours, so this is not defensive about malice — it is about
  * version skew. A deployed browser tab can outlive a backend release, and a
  * client that throws on a message type it has never seen would take the whole
- * feature down for anyone who had not reloaded.
+ * feature down for anyone who had not reloaded. That cuts both ways: a tab
+ * still running the version of this file that knew about live cursors will
+ * receive none, and a tab running this one would discard them.
  */
 export function parseInboundMessage(data: unknown): InboundMessage | null {
   if (typeof data !== "string") return null;
@@ -80,15 +72,6 @@ export function parseInboundMessage(data: unknown): InboundMessage | null {
     return message as PresenceMessage;
   }
 
-  if (
-    message.type === "cursor" &&
-    typeof message.id === "string" &&
-    typeof message.x === "number" &&
-    typeof message.y === "number"
-  ) {
-    return message as CursorBroadcastMessage;
-  }
-
   return null;
 }
 
@@ -102,9 +85,6 @@ export const MAX_RECONNECT_DELAY_MS = 30_000;
 
 /** A hidden tab is disconnected after this long, and reconnects when it returns. */
 export const HIDDEN_DISCONNECT_MS = 5 * 60_000;
-
-/** Another visitor's cursor fades once it has not moved for this long. */
-export const CURSOR_IDLE_MS = 5_000;
 
 /**
  * Exponential backoff with full jitter, capped at 30 seconds.
